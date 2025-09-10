@@ -1,6 +1,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -245,25 +246,6 @@
       animation: popIn 0.5s ease-out forwards;
 
   }
-  #hacksDiv {
-    display: none;
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #141414;
-    color: white;
-    inset: 0;
-    margin:auto;
-    position: fixed;
-    z-index: 1000;
-    border-radius:20px; 
-    opacity:85%; 
-    width:600px;
-    height: 500px; 
-    overflow-x: hidden;
-    overflow-y: auto;
-      animation: popIn 0.5s ease-out forwards;
-
-  }
    #emulatorDiv {
     display: none;
     margin-top: 20px;
@@ -422,6 +404,10 @@
     <img src="apps1.png">
   </a>
 
+    <a onclick="Chat()">
+    <img src="apps1.png">
+  </a>
+
 
 </div>
 
@@ -496,6 +482,47 @@
           
 </div>
 
+<div id="ChatDiv">
+  <button class="close-btn" onclick="document.getElementById('ChatDiv').style.display = 'none';">×</button>
+
+
+ 
+<iframe class="frame" src="chat.html"></iframe>
+  <style>
+    .frame{
+      width:100%;
+      height:95%;
+      bottom:0;
+      position: absolute;
+      border:none;
+      border-radius:0px 0px 20px 20px;
+      left:0;
+    }
+     #ChatDiv {
+    display: none;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #141414;
+    color: white;
+    inset: 0;
+    margin:auto;
+    position: fixed;
+    z-index: 1000;
+    border-radius:20px; 
+    opacity:85%; 
+    width:85%;
+    height: 73%; 
+    overflow-x: hidden;
+    overflow-y: auto;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+
+      animation: popIn 0.5s ease-out forwards;
+
+  }
+  </style>
+ 
+           
+</div>
 
 <div id="soundDiv">
   <button class="close-btn" onclick="document.getElementById('soundDiv').style.display = 'none';">×</button>
@@ -527,31 +554,16 @@
         });
     </script>
 
-    <div id="hacksDiv">
-  <button class="close-btn" onclick="document.getElementById('hacksDiv').style.display = 'none';">×</button>
-  <h1 class="gtext"> Exploits </h1>
-  <p color="white" style="text-align: center;"></p>
-
-          <a href="javascript:(function(x,y){if(!window.click){window.click=!0,document.body.style.cursor='crosshair';var cps=prompt('Autoclicker CPS: (Under 200 recommended)');if(!cps||isNaN(cps)?(alert(%27You%20entered%20something%20wrong.%20Try%20running%20the%20script%20again.%27),end()):alert(%27Autoclicker%20activated%20at%20%27+cps+%27%20CPS!%20Do%20[ctrl+e]%20to%20stop.%27),addEventListener(%27mousemove%27,e=%3E{x=e.clientX,y=e.clientY}),addEventListener(%27keydown%27,e=%3E{%27e%27===e.key&&e.ctrlKey&&(alert(%27Autoclicker%20deactivated!%20Click%20the%20bookmark%20again%20to%20reactivate!%27),end())}),window.click)var%20int=setInterval(function(){var%20e=document.elementFromPoint(x,y);e&&e.click()},1e3/cps);function%20end(){clearInterval(int),window.click=!1,document.body.style.cursor=%27default%27}}})();">
-      <button class="btn">AutoClicker</button>
-      </a>
-
-
-          <a href="javascript:if(document.body.contentEditable !== 'true') {    document.body.contentEditable = 'true'; document.designMode='on'; void 0} else {    document.body.contentEditable = 'false'; document.designMode='off'; void 0}">
-      <button class="btn">Edit anything</button>
-      </a>
-
-       <a href="javascript:for(var i=0; i<(document.getElementsByTagName('a')).length; i++) {(document.getElementsByTagName('a')[i]).style.pointerEvents = 'none';}function handler(e) {e = e || window.event;var target = e.target || e.srcElement;target.style.display = 'none';document.removeEventListener('click', handler, false);cursor('default');for(var i=0; i<(document.getElementsByTagName('a')).length; i++) {(document.getElementsByTagName('a')[i]).style.pointerEvents = 'initial';}}document.addEventListener('click', handler, false);cursor('crosshair');function cursor(cur) { document.body.style.cursor = cur; }">
-      <button class="btn">Destroy anything</button>
-      </a>
-
-
-
         
      
         
        
-
+<script>
+  function Chat(){
+    const div = document.getElementById('ChatDiv');
+    div.style.display = div.style.display === 'block' ? 'none' : 'block';
+  }
+</script>
           
 </div>
 
@@ -1085,9 +1097,6 @@
     <img class="timg" src="music.png">
   </a>
 
-   <a onclick="hacks()">
-    <img class="timg" src="hacks.png">
-  </a>
  
 
   <h2 class="battery" id="batteryPercentage"></h2>
@@ -1206,13 +1215,6 @@
 <script>
   function sound(){
     const div = document.getElementById('soundDiv');
-    div.style.display = div.style.display === 'block' ? 'none' : 'block';
-  }
-</script>
-
-<script>
-  function hacks(){
-    const div = document.getElementById('hackDiv');
     div.style.display = div.style.display === 'block' ? 'none' : 'block';
   }
 </script>
