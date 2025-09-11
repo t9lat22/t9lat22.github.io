@@ -1351,6 +1351,43 @@ if (selectedBackground) {
   });
 </script>
 
+ <div id="imgBox"></div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+    // 🔥 Your Firebase config (same as Page A)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDB4VU2JNQGO5pMgXGaasIiY6kFxgsb-84",
+      authDomain: "chat-99dfe.firebaseapp.com",
+      databaseURL: "https://chat-99dfe-default-rtdb.firebaseio.com",
+      projectId: "chat-99dfe",
+      storageBucket: "chat-99dfe.firebasestorage.app",
+      messagingSenderId: "17277094525",
+      appId: "1:17277094525:web:989d19d04fdde769de7f14",
+      measurementId: "G-NEXJFPJPCP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const imgBox = document.getElementById("imgBox");
+
+    // Listen to changes in globalImage in real-time
+    const imageRef = ref(db, "globalImage");
+    onValue(imageRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data && data.url) {
+        imgBox.innerHTML = `<img src="${data.url}">`;
+      } else {
+        imgBox.innerHTML = "";
+      }
+    });
+  </script>
+
 </head>
 
 
