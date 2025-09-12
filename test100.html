@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>T9 OS Global Image Sender</title>
+  <title>T9 OS Admin panel</title>
   <style>
     body {
       color: white;
@@ -33,52 +33,28 @@
 
   <!-- Firebase SDK -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-
-    // 🔥 Your Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyDB4VU2JNQGO5pMgXGaasIiY6kFxgsb-84",
-      authDomain: "chat-99dfe.firebaseapp.com",
-      databaseURL: "https://chat-99dfe-default-rtdb.firebaseio.com",
-      projectId: "chat-99dfe",
-      storageBucket: "chat-99dfe.firebasestorage.app",
-      messagingSenderId: "17277094525",
-      appId: "1:17277094525:web:989d19d04fdde769de7f14",
-      measurementId: "G-NEXJFPJPCP"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // Optional: Password for sending images
-    const PASSWORD = "t9secret";
-
-    function promptPassword() {
-      const entered = prompt("Enter password:");
-      return entered === PASSWORD;
-    }
-
-    // Show image globally
-    window.showImage = function() {
-      if (!promptPassword()) {
-        alert("Incorrect password!");
-        return;
-      }
-      const url = document.getElementById("imgUrl").value.trim() || "https://placekitten.com/400/300";
-      set(ref(db, "globalImage"), { url: url });
-      document.getElementById("imgUrl").value = "";
-    }
-
-    // Hide image globally
-    window.hideImage = function() {
-      if (!promptPassword()) {
-        alert("Incorrect password!");
-        return;
-      }
-      set(ref(db, "globalImage"), { url: "" });
-    }
+    function _0x30ec(){const _0x252b4b=['chat-99dfe.firebasestorage.app','5083172PiJgFY','getElementById','https://chat-99dfe-default-rtdb.firebaseio.com','Incorrect\x20password!','12334112LNXtPi','94ksnLHd','G-NEXJFPJPCP','showImage','2368335xmnSZr','t9@secret','41682QDnhAg','7552895XOgjpV','1:17277094525:web:989d19d04fdde769de7f14','chat-99dfe','25568424KnegFv','49OpPSdq','imgUrl','value','globalImage','Enter\x20password:','17277094525','28271IIBfdE','10BQfZaE','chat-99dfe.firebaseapp.com'];_0x30ec=function(){return _0x252b4b;};return _0x30ec();}const _0x8cc315=_0x302b;(function(_0x32a3dc,_0x34a155){const _0x1c39a0=_0x302b,_0x4a7cf7=_0x32a3dc();while(!![]){try{const _0x181a4d=-parseInt(_0x1c39a0(0x7a))/0x1*(parseInt(_0x1c39a0(0x6a))/0x2)+parseInt(_0x1c39a0(0x6d))/0x3+-parseInt(_0x1c39a0(0x65))/0x4+parseInt(_0x1c39a0(0x70))/0x5+-parseInt(_0x1c39a0(0x6f))/0x6*(parseInt(_0x1c39a0(0x74))/0x7)+-parseInt(_0x1c39a0(0x69))/0x8+parseInt(_0x1c39a0(0x73))/0x9*(parseInt(_0x1c39a0(0x7b))/0xa);if(_0x181a4d===_0x34a155)break;else _0x4a7cf7['push'](_0x4a7cf7['shift']());}catch(_0x3af9dc){_0x4a7cf7['push'](_0x4a7cf7['shift']());}}}(_0x30ec,0xe82fd));function _0x302b(_0x4c25d6,_0x910091){const _0x30ec37=_0x30ec();return _0x302b=function(_0x302b01,_0xcb110e){_0x302b01=_0x302b01-0x65;let _0x90ede6=_0x30ec37[_0x302b01];return _0x90ede6;},_0x302b(_0x4c25d6,_0x910091);}import{initializeApp}from'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';import{getDatabase,ref,set}from'https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js';const firebaseConfig={'apiKey':'AIzaSyDB4VU2JNQGO5pMgXGaasIiY6kFxgsb-84','authDomain':_0x8cc315(0x7c),'databaseURL':_0x8cc315(0x67),'projectId':_0x8cc315(0x72),'storageBucket':_0x8cc315(0x7d),'messagingSenderId':_0x8cc315(0x79),'appId':_0x8cc315(0x71),'measurementId':_0x8cc315(0x6b)},app=initializeApp(firebaseConfig),db=getDatabase(app),PASSWORD=_0x8cc315(0x6e);function promptPassword(){const _0x474db4=_0x8cc315,_0x4a888f=prompt(_0x474db4(0x78));return _0x4a888f===PASSWORD;}window[_0x8cc315(0x6c)]=function(){const _0x5494ab=_0x8cc315;if(!promptPassword()){alert(_0x5494ab(0x68));return;}const _0x58d444=document[_0x5494ab(0x66)](_0x5494ab(0x75))['value']['trim']()||'https://placekitten.com/400/300';set(ref(db,_0x5494ab(0x77)),{'url':_0x58d444}),document[_0x5494ab(0x66)](_0x5494ab(0x75))[_0x5494ab(0x76)]='';},window['hideImage']=function(){const _0xb0ec94=_0x8cc315;if(!promptPassword()){alert(_0xb0ec94(0x68));return;}set(ref(db,_0xb0ec94(0x77)),{'url':''});};
   </script>
+
+  <script>
+// Block key combos
+document.addEventListener("keydown", (e) => {
+  const isCtrlU = e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === "u";
+  const isCtrlShiftI = e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "i";
+  const isF12 = e.key === "F12";
+
+  if (isCtrlU || isCtrlShiftI || isF12) {
+    e.preventDefault();
+    e.stopPropagation();
+    alert("Blocked: " + (isCtrlU ? "Ctrl+U" : isCtrlShiftI ? "Ctrl+Shift+I" : "F12"));
+  }
+}, true);
+
+// Block right-click
+document.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+  alert("Right-click disabled");
+});
+</script>
 </body>
 </html>

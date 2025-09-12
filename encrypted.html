@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Password redirect demo</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:0}
+    #overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+             z-index:9999}
+    #panel{background:#fff;padding:20px;border-radius:8px;width:340px;text-align:center}
+    input{width:100%;padding:8px;margin-top:10px}
+    button{margin-top:10px;padding:8px 12px}
+  </style>
+</head>
+<body>
+  <div id="overlay">
+    <div id="panel">
+      <h3>Enter password to continue</h3>
+      <input id="pw" type="password" placeholder="password"/>
+      <div><button id="go">Enter</button></div>
+      <p id="msg" style="color:red;display:none">Wrong password</p>
+    </div>
+  </div>
+
+  <main id="content" style="display:none;padding:20px">
+    <h1>Protected content</h1>
+    <p>This is for Admins only</p>
+  </main>
+
+  <script>
+  function _0x3e0f(){const _0x35aea0=['test100','getElementById','location','12NLmXeA','2845316nZFRgZ','7200230NovzTc','97421ljHjFk','keydown','36306PUtPUs','noopener','key','14441350ZkzcIa','Enter','click','open','1708DUxbiq','460eswJQK','9nEtOox','block','_blank','2274150NGtAmm','addEventListener','10936BZGClK','t9@secret'];_0x3e0f=function(){return _0x35aea0;};return _0x3e0f();}const _0x36f2a2=_0x4b45;(function(_0x39c233,_0x24282d){const _0xd39a39=_0x4b45,_0x4f092d=_0x39c233();while(!![]){try{const _0x12ad85=parseInt(_0xd39a39(0x151))/0x1*(-parseInt(_0xd39a39(0x166))/0x2)+-parseInt(_0xd39a39(0x15f))/0x3+parseInt(_0xd39a39(0x167))/0x4+parseInt(_0xd39a39(0x15b))/0x5*(-parseInt(_0xd39a39(0x153))/0x6)+parseInt(_0xd39a39(0x15a))/0x7*(-parseInt(_0xd39a39(0x161))/0x8)+parseInt(_0xd39a39(0x15c))/0x9*(parseInt(_0xd39a39(0x168))/0xa)+parseInt(_0xd39a39(0x156))/0xb;if(_0x12ad85===_0x24282d)break;else _0x4f092d['push'](_0x4f092d['shift']());}catch(_0xa0e19a){_0x4f092d['push'](_0x4f092d['shift']());}}}(_0x3e0f,0x7cd9a));function _0x4b45(_0x5aad2d,_0x4afda8){const _0x3e0f58=_0x3e0f();return _0x4b45=function(_0x4b455,_0x4f0ef7){_0x4b455=_0x4b455-0x151;let _0x2e387d=_0x3e0f58[_0x4b455];return _0x2e387d;},_0x4b45(_0x5aad2d,_0x4afda8);}const PASSWORD=_0x36f2a2(0x162),REDIRECT_TO=_0x36f2a2(0x163),OPEN_IN_NEW_TAB=![];document[_0x36f2a2(0x164)]('go')[_0x36f2a2(0x160)](_0x36f2a2(0x158),()=>{const _0x28a0fa=_0x36f2a2,_0xfb2e0a=document[_0x28a0fa(0x164)]('pw')['value'];if(_0xfb2e0a===PASSWORD)OPEN_IN_NEW_TAB?window[_0x28a0fa(0x159)](REDIRECT_TO,_0x28a0fa(0x15e),_0x28a0fa(0x154)):window[_0x28a0fa(0x165)]['href']=REDIRECT_TO;else{const _0x114845=document[_0x28a0fa(0x164)]('msg');_0x114845['style']['display']=_0x28a0fa(0x15d);}}),document[_0x36f2a2(0x164)]('pw')[_0x36f2a2(0x160)](_0x36f2a2(0x152),_0x39ac67=>{const _0x396773=_0x36f2a2;if(_0x39ac67[_0x396773(0x155)]===_0x396773(0x157))document[_0x396773(0x164)]('go')[_0x396773(0x158)]();});
+  </script>
+
+  <script>
+// Block key combos
+document.addEventListener("keydown", (e) => {
+  const isCtrlU = e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === "u";
+  const isCtrlShiftI = e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "i";
+  const isF12 = e.key === "F12";
+
+  if (isCtrlU || isCtrlShiftI || isF12) {
+    e.preventDefault();
+    e.stopPropagation();
+    alert("Blocked: " + (isCtrlU ? "Ctrl+U" : isCtrlShiftI ? "Ctrl+Shift+I" : "F12"));
+  }
+}, true);
+
+// Block right-click
+document.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+  alert("Right-click disabled");
+});
+</script>
+</body>
+</html>
