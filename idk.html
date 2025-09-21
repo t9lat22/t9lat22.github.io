@@ -1,15 +1,15 @@
 <script>
 var win = window.open();
-var url = "thetestbase99.html";   // same-origin page you control
-var faviconUrl = "favicon.png";   // default fallback favicon
+var url = "thetestbase99.html";   // same-origin page
+var defaultFavicon = "favicon.png"; // fallback
 
-// Base shell for about:blank tab
+// Create about:blank shell
 win.document.write(`
 <!DOCTYPE html>
 <html>
 <head>
   <title>T9 OS</title>
-  <link rel="icon" type="image/x-icon" href="${faviconUrl}">
+  <link rel="icon" type="image/x-icon" href="${defaultFavicon}">
 </head>
 <body style="margin:0; padding:0; overflow:hidden;"></body>
 </html>
@@ -27,42 +27,42 @@ iframe.style.border = "none";
 iframe.src = url;
 win.document.body.appendChild(iframe);
 
-// Grab reference to favicon in about:blank shell
+// Reference to favicon in about:blank tab
 var favicon = win.document.querySelector("link[rel='icon']");
 
-// Function to sync title + favicon
+// Function to sync title + favicon from iframe
 function syncFromIframe(iframeDoc) {
-  // Copy title
+  // Mirror title
   win.document.title = iframeDoc.title || "T9 OS";
 
-  // Copy favicon
+  // Mirror favicon
   const iframeIcon = iframeDoc.querySelector("link[rel~='icon']");
   if (iframeIcon) {
     favicon.href = iframeIcon.href;
   } else {
-    favicon.href = faviconUrl; // fallback
+    favicon.href = defaultFavicon;
   }
 }
 
-// Watch for changes inside the iframe
+// Listen for iframe load
 iframe.addEventListener("load", () => {
   try {
     const iframeDoc = iframe.contentDocument;
     syncFromIframe(iframeDoc);
 
-    // Use MutationObserver to auto-update when title or favicon changes
+    // Watch <head> for changes (title or favicon)
     const observer = new MutationObserver(() => {
       syncFromIframe(iframeDoc);
     });
 
     observer.observe(iframeDoc.head, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ["href", "rel"]
+      childList: true,    // detect new/removed nodes
+      subtree: true,      // detect inside children
+      attributes: true,   // detect attribute changes
+      attributeFilter: ["href", "rel"] // watch only these attributes
     });
   } catch (e) {
-    console.warn("Cross-origin page, can't mirror title/favicon", e);
+    console.warn("Cannot mirror iframe (cross-origin?)", e);
   }
 });
 </script>
