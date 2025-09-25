@@ -35,10 +35,8 @@
     // Mark myself as connected
     set(myConnection, true);
 
-    // Remove me when I disconnect
     onDisconnect(myConnection).remove();
 
-    // Update live user count
     onValue(connectionsRef, (snapshot) => {
       document.getElementById("count").innerText = snapshot.size ?? snapshot.numChildren();
     });

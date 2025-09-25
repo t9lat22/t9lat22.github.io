@@ -921,6 +921,7 @@ requestAnimationFrame(trackFPS);
   </a>
 
  
+  <h2 style="text-align:center; color:white; ">👥 People Online: <span id="count">0</span></h2>
 
 
   <h2 class="battery" id="batteryPercentage"></h2>
@@ -1060,6 +1061,45 @@ requestAnimationFrame(trackFPS);
     div.style.display = div.style.display === 'block' ? 'none' : 'block';
   }
 </script>
+
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, onValue, push, onDisconnect, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+    // 🔥 Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDB4VU2JNQGO5pMgXGaasIiY6kFxgsb-84",
+      authDomain: "chat-99dfe.firebaseapp.com",
+      databaseURL: "https://chat-99dfe-default-rtdb.firebaseio.com",
+      projectId: "chat-99dfe",
+      storageBucket: "chat-99dfe.firebasestorage.app",
+      messagingSenderId: "17277094525",
+      appId: "1:17277094525:web:989d19d04fdde769de7f14",
+      measurementId: "G-NEXJFPJPCP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Reference for connections
+    const connectionsRef = ref(db, "connections");
+
+    // Create a new unique connection for THIS user
+    const myConnection = push(connectionsRef);
+
+    // Mark myself as connected
+    set(myConnection, true);
+
+    // Remove me when I disconnect
+    onDisconnect(myConnection).remove();
+
+    // Update live user count
+    onValue(connectionsRef, (snapshot) => {
+      document.getElementById("count").innerText = snapshot.size ?? snapshot.numChildren();
+    });
+  </script>
 
 <script>
   function emulator(){
