@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+    <link rel="stylesheet" href="index.css">
+    <link rel="shortcut icon" type="image/jpg" href="~/favicon.ico"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.style.opacity = 1;
+
+            setTimeout(function() {
+                loadingScreen.style.opacity = 0;
+                setTimeout(function() {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }, 500);
+        });
+
+        function searchFunction() {
+            var input, filter, gallery, a, i, txtValue;
+            input = document.getElementById('searchInput');
+            filter = input.value.toUpperCase();
+            gallery = document.getElementsByClassName('gallery')[0];
+            a = gallery.getElementsByTagName('a');
+            for (i = 0; i < a.length; i++) {
+                txtValue = a[i].getAttribute('title');
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    a[i].style.display = '';
+                } else {
+                    a[i].style.display = 'none';
+                }
+            }
+        }
+
+        function filterByCategory() {
+            var category = document.getElementById('categorySelect').value;
+            var gallery = document.getElementsByClassName('gallery')[0];
+            var a = gallery.getElementsByTagName('a');
+
+            for (var i = 0; i < a.length; i++) {
+                var gameCategory = a[i].getAttribute('data-category');
+                if (category === 'all' || gameCategory === category) {
+                    a[i].style.display = '';
+                } else {
+                    a[i].style.display = 'none';
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: "Lexend", sans-serif;
+            background: #111;
+            color: #fff;
+        }
+
+        #graph-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #141414;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #111111;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #uv-form {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+  <!-- Background grid -->
+  <canvas id="graph-bg"></canvas>
+
+  <!-- Loading screen -->
+  <div id="loadingScreen">
+      <div class="loader"></div>
+  </div>
+
+  <!-- Content -->
+  <div id="content">
+      <h1 class="gtext">T9 OS</h1>
+      <form id="uv-form">
+          <input id="uv-search-engine" value="https://www.google.com/search?q=%s" type="hidden" />
+          <div class="search-container">
+              <input id="uv-address" type="text" placeholder="Search without restrictions..." class="form__input" />
+          </div>
+      </form>
+      <div class="desc left-margin">
+          <p id="uv-error"></p>
+          <pre id="uv-error-code"></pre>
+      </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="uv/uv.bundle.js" defer></script>
+  <script src="uv/uv.config.js" defer></script>
+  <script src="register-sw.js" defer></script>
+  <script src="search.js" defer></script>
+  <script src="index.js" defer></script>
+
+  <!-- Grid background script -->
+  <script>
+  (function () {
+    const canvas = document.getElementById("graph-bg");
+    const ctx = canvas.getContext("2d");
+    let width, height;
+
+    const gridSize = 80;        // spacing
+    const sideDriftFactor = 0.1; // slower sideways drift
+
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+      draw();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
+
+      const scrollY = window.scrollY || window.pageYOffset;
+      const offsetX = -((scrollY * sideDriftFactor) % gridSize);
+      const offsetY = -(scrollY % gridSize);
+
+      ctx.strokeStyle = "rgba(255,255,255,0.04)"; // subtle lines
+      ctx.lineWidth = 1;
+
+      for (let x = offsetX; x < width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+
+      for (let y = offsetY; y < height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+    }
+
+    window.addEventListener("resize", resize);
+    window.addEventListener("scroll", draw);
+
+    resize();
+  })();
+  </script>
+</body>
+</html>
