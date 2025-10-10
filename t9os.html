@@ -324,20 +324,20 @@ border: 1px solid rgba(255, 255, 255, 0.15);
     display: none;
     margin-top: 20px;
     padding: 10px;
-   background: rgba(0, 0, 0, 0.3); 
-border: 1px solid rgba(255, 255, 255, 0.15);    
+background-color: #1b1b1bbd;
+border: 1px solid rgb(34, 34, 34);   
     color: white;
     inset: 0;
     margin:auto;
     position: fixed;
     z-index: 1000;
-    border-radius:20px; 
-    opacity:85%; 
-    width:85%;
-    height: 73%; 
+    border-radius:30px; 
+    width:95%;
+    height: 77%; 
     overflow-x: hidden;
     overflow-y: auto;
-      animation: popIn 0.5s ease-out forwards;
+box-shadow: 2px #141414;
+      animation: popIn2 0.5s ease-out forwards;
 
   }
     #adminDiv {
@@ -733,6 +733,8 @@ backdrop-filter: blur(7px);
 
 <div id="searchDiv">
   <button class="close-btn2" onclick="document.getElementById('searchDiv').style.display = 'none';">●</button>
+      <button class="full-btn" onclick="fullscreenIframe()">●</button>
+
   &nbsp;&nbsp;&nbsp;&nbsp; <!-- Adds manual spacing -->
   <a href='/t9os.html'>
   </a>
@@ -762,7 +764,7 @@ backdrop-filter: blur(7px);
   <style>
     .frame{
       width:100%;
-      height:96%;
+      height:95%;
       bottom:0;
       position: absolute;
       border:none;
