@@ -525,3 +525,118 @@ if (selectedBackground) {
     div.style.display = div.style.display === 'block' ? 'none' : 'block';
   }
 </script>
+
+
+  <style>
+    
+
+    #startup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #0b0c1c;
+      z-index: 9999;
+    }
+
+    /* Logo image with galaxy glow */
+    .logo-img {
+      width: 150px;
+      height: 150px;
+      border-radius: 20px;
+      /* Remove border-image and use box-shadow for glow */
+      box-shadow:
+        0 0 15px #8a2be2,
+        0 0 25px #4b0082 inset,
+        0 0 35px #ff00ff,
+        0 0 50px #8a2be2;
+      animation: popGlow 2s ease forwards;
+    }
+
+    @keyframes popGlow {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+        box-shadow: 0 0 0 #8a2be2;
+      }
+      50% {
+        transform: scale(1.2);
+        opacity: 1;
+        box-shadow:
+          0 0 30px #8a2be2,
+          0 0 50px #4b0082 inset,
+          0 0 45px #ff00ff,
+          0 0 60px #8a2be2;
+      }
+      100% {
+        transform: scale(1);
+        box-shadow:
+          0 0 25px #8a2be2,
+          0 0 40px #4b0082 inset,
+          0 0 35px #ff00ff,
+          0 0 50px #8a2be2;
+      }
+    }
+
+    .bar-container {
+      width: 300px;
+      height: 12px;
+      background: #1a1a2e;
+      border-radius: 6px;
+      margin-top: 30px;
+      overflow: hidden;
+    }
+
+    .bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #8a2be2, #4b0082, #ff00ff);
+      animation: load 3s forwards;
+    }
+
+    @keyframes load {
+      0% { width: 0; }
+      100% { width: 100%; }
+    }
+
+    .loading-text {
+      margin-top: 20px;
+      color: #ff77ff;
+      font-weight: bold;
+      text-shadow: 0 0 10px #8a2be2, 0 0 20px #4b0082, 0 0 25px #ff00ff;
+      opacity: 0;
+      animation: fadeIn 3s forwards;
+      animation-delay: 1s;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+  
+  </style>
+
+
+  <div id="startup">
+    <img src="newlogo.png" alt="T9 OS Logo" class="logo-img">
+    <div class="bar-container">
+      <div class="bar"></div>
+    </div>
+    <div class="loading-text">Starting up...</div>
+  </div>
+
+ 
+
+  <script>
+    setTimeout(() => {
+      document.getElementById('startup').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+    }, 3000);
+  </script>
+
