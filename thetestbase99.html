@@ -1219,42 +1219,51 @@ requestAnimationFrame(trackFPS);
 
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getDatabase, ref, onValue, push, onDisconnect, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getDatabase, ref, onValue, push, onDisconnect, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-    // 🔥 Your Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyDB4VU2JNQGO5pMgXGaasIiY6kFxgsb-84",
-      authDomain: "chat-99dfe.firebaseapp.com",
-      databaseURL: "https://chat-99dfe-default-rtdb.firebaseio.com",
-      projectId: "chat-99dfe",
-      storageBucket: "chat-99dfe.firebasestorage.app",
-      messagingSenderId: "17277094525",
-      appId: "1:17277094525:web:989d19d04fdde769de7f14",
-      measurementId: "G-NEXJFPJPCP"
-    };
+  // 🔥 Your Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDB4VU2JNQGO5pMgXGaasIiY6kFxgsb-84",
+    authDomain: "chat-99dfe.firebaseapp.com",
+    databaseURL: "https://chat-99dfe-default-rtdb.firebaseio.com",
+    projectId: "chat-99dfe",
+    storageBucket: "chat-99dfe.firebasestorage.app",
+    messagingSenderId: "17277094525",
+    appId: "1:17277094525:web:989d19d04fdde769de7f14",
+    measurementId: "G-NEXJFPJPCP"
+  };
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
-    // Reference for connections
-    const connectionsRef = ref(db, "connections");
+  // Reference for connections
+  const connectionsRef = ref(db, "connections");
 
-    // Create a new unique connection for THIS user
-    const myConnection = push(connectionsRef);
+  // Human detection
+  let isHuman = false;
+  window.addEventListener("mousemove", () => { isHuman = true; }, { once: true });
+  window.addEventListener("touchstart", () => { isHuman = true; }, { once: true });
 
-    // Mark myself as connected
+  // Create a new unique connection for THIS user if human
+  let myConnection;
+  function connectIfHuman() {
+    if (!isHuman) return; // skip bots
+    myConnection = push(connectionsRef);
     set(myConnection, true);
-
-    // Remove me when I disconnect
     onDisconnect(myConnection).remove();
+  }
 
-    // Update live user count
-    onValue(connectionsRef, (snapshot) => {
-      document.getElementById("count").innerText = snapshot.size ?? snapshot.numChildren();
-    });
-  </script>
+  // Wait a short time for human interaction
+  setTimeout(connectIfHuman, 3000); // 3 seconds delay
+
+  // Update live user count
+  onValue(connectionsRef, (snapshot) => {
+    document.getElementById("count").innerText = snapshot.numChildren();
+  });
+</script>
+
 
 <script>
   function emulator(){
