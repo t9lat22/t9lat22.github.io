@@ -556,7 +556,7 @@ border: 1px solid rgba(255, 255, 255, 0.15);
 
 
 <!-- Navbar -->
-<div id="navba" class="navbar">
+<div id="navbar" class="navbar">
   <a onclick="t9()">
     <img src="favicon.png">
   </a>
@@ -1295,11 +1295,10 @@ requestAnimationFrame(trackFPS);
 </div>
   
 <script>
-const navbar = document.getElementById('navba');
+const navbar = document.getElementById('navbar');
 
 function toggleNavbar() {
-  navbar.classList.toggle('vertical');
-  const isVertical = navbar.classList.contains('vertical');
+  const isVertical = navbar.classList.toggle('vertical');
   localStorage.setItem('navbarOrientation', isVertical ? 'vertical' : 'horizontal');
 }
 
@@ -1307,6 +1306,8 @@ window.addEventListener('load', () => {
   const saved = localStorage.getItem('navbarOrientation');
   if (saved === 'vertical') {
     navbar.classList.add('vertical');
+  } else {
+    navbar.classList.remove('vertical'); 
   }
 });
 </script>
