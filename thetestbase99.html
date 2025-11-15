@@ -1859,12 +1859,26 @@ let isDragging = false;
 let offsetX = 0;
 let offsetY = 0;
 
+// Handle cursor while hovering
+box.addEventListener('pointermove', e => {
+    const rect = box.getBoundingClientRect();
+    const offsetYInDiv = e.clientY - rect.top;
+
+    if (isDragging) {
+        box.style.cursor = 'grabbing';
+    } else if (offsetYInDiv <= DRAG_HEIGHT) {
+        box.style.cursor = 'grab';
+    } else {
+        box.style.cursor = 'default';
+    }
+});
+
+// Start dragging only from top area
 box.addEventListener('pointerdown', e => {
     const rect = box.getBoundingClientRect();
     const offsetYInDiv = e.clientY - rect.top;
 
-    // Only start drag if pointer is within top DRAG_HEIGHT
-    if (offsetYInDiv > DRAG_HEIGHT) return;
+    if (offsetYInDiv > DRAG_HEIGHT) return; // not top area
 
     isDragging = true;
     offsetX = e.clientX - rect.left;
@@ -1879,13 +1893,13 @@ box.addEventListener('pointerdown', e => {
     box.style.cursor = 'grabbing';
 });
 
+// Dragging
 document.addEventListener('pointermove', e => {
     if (!isDragging) return;
 
     let newX = e.clientX - offsetX;
     let newY = e.clientY - offsetY;
 
-    // Keep inside viewport
     newX = Math.max(0, Math.min(newX, window.innerWidth - box.offsetWidth));
     newY = Math.max(0, Math.min(newY, window.innerHeight - box.offsetHeight));
 
@@ -1893,11 +1907,23 @@ document.addEventListener('pointermove', e => {
     box.style.top = newY + 'px';
 });
 
+// Stop dragging
 document.addEventListener('pointerup', () => {
     if (!isDragging) return;
     isDragging = false;
-    box.style.cursor = 'grab';
+
+    // Reset cursor depending on pointer position
+    const rect = box.getBoundingClientRect();
+    const pointerY = window.event?.clientY || 0;
+    const offsetYInDiv = pointerY - rect.top;
+
+    if (offsetYInDiv <= DRAG_HEIGHT) {
+        box.style.cursor = 'grab';
+    } else {
+        box.style.cursor = 'default';
+    }
 });
+
 
 
 
