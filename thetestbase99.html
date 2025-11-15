@@ -1891,6 +1891,9 @@ divs.forEach(box => {
         offsetX = e.clientX - rect.left;
         offsetY = offsetYInDiv;
 
+        // Prevent text selection while dragging
+        document.body.style.userSelect = 'none';
+
         box.style.inset = 'auto';
         box.style.margin = '0';
         box.style.left = rect.left + 'px';
@@ -1918,6 +1921,9 @@ divs.forEach(box => {
         if (!isDragging) return;
         isDragging = false;
 
+        // Restore text selection
+        document.body.style.userSelect = '';
+
         const rect = box.getBoundingClientRect();
         const offsetYInDiv = e.clientY - rect.top;
 
@@ -1928,10 +1934,8 @@ divs.forEach(box => {
         }
     });
 });
-
-
-
 </script>
+
 
 
 
