@@ -1900,16 +1900,9 @@ divs.forEach(box => {
     const offsetYInDiv = e.clientY - rect.top;
     const corner = checkBottomCorner(e);
 
-    document.body.style.userSelect = 'none';
-    box.style.inset = 'auto';
-    box.style.margin = '0';
-    box.style.left = rect.left + 'px';
-    box.style.top = rect.top + 'px';
-    box.style.width = rect.width + 'px';
-    box.style.height = rect.height + 'px';
-
     if (offsetYInDiv <= DRAG_HEIGHT) {
       isDragging = true;
+      document.body.style.userSelect = 'none';
       box.style.cursor = 'grabbing';
       dragOffsetX = e.clientX - rect.left;
       dragOffsetY = e.clientY - rect.top;
@@ -1917,7 +1910,16 @@ divs.forEach(box => {
     }
     else if (corner) {
       isResizing = true;
+      document.body.style.userSelect = 'none';
       resizingCorner = corner;
+      
+      box.style.inset = 'auto';
+      box.style.margin = '0';
+      box.style.left = rect.left + 'px';
+      box.style.top = rect.top + 'px';
+      box.style.width = rect.width + 'px';
+      box.style.height = rect.height + 'px';
+      
       startLeft = rect.left;
       startTop = rect.top;
       startWidth = rect.width;
@@ -1972,9 +1974,9 @@ divs.forEach(box => {
     document.body.style.userSelect = '';
   });
 });
-</script>
+</script></script>
 
-<!--FIXED SCRIPT-->
+<!--FIXED SCRIPT 2-->
 
 
 
