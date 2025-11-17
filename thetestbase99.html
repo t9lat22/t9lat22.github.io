@@ -1855,6 +1855,8 @@ if (selectedBackground) {
 <script>
 const DRAG_HEIGHT = 50;
 const RESIZE_MARGIN = 20;
+const MIN_W = 50;
+const MIN_H = 50;
 
 const divs = [
   document.getElementById('settingsDiv'),
@@ -1865,101 +1867,148 @@ const divs = [
   document.getElementById('ChatDiv')
 ];
 
+function disableIframes() {
+  document.querySelectorAll('iframe').forEach(f => f.style.pointerEvents = 'none');
+}
+function enableIframes() {
+  document.querySelectorAll('iframe').forEach(f => f.style.pointerEvents = '');
+}
+
 divs.forEach(box => {
+  if (!box) return;
+
   let isDragging = false;
   let isResizing = false;
 
-  let dragOffsetX = 0, dragOffsetY = 0;
+  // Drag state
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
 
-  let startWidth = 0, startHeight = 0;
-  let startMouseX = 0, startMouseY = 0;
+  // Resize state (bottom-right only)
+  let startWidth = 0;
+  let startHeight = 0;
+  let startMouseX = 0;
+  let startMouseY = 0;
 
-  function isInBottomRight(e) {
+  function inBottomRightCorner(clientX, clientY) {
     const r = box.getBoundingClientRect();
-    return (
-      e.clientX >= r.right - RESIZE_MARGIN &&
-      e.clientY >= r.bottom - RESIZE_MARGIN
-    );
+    return clientX >= (r.right - RESIZE_MARGIN) && clientY >= (r.bottom - RESIZE_MARGIN);
   }
 
-  box.addEventListener("pointermove", e => {
+  // Show proper cursor
+  box.addEventListener('pointermove', e => {
     if (isDragging || isResizing) return;
-
     const rect = box.getBoundingClientRect();
     const offsetY = e.clientY - rect.top;
-
-    if (offsetY <= DRAG_HEIGHT) {
-      box.style.cursor = "grab";
-    } else if (isInBottomRight(e)) {
-      box.style.cursor = "nwse-resize";
-    } else {
-      box.style.cursor = "default";
-    }
+    if (offsetY <= DRAG_HEIGHT) box.style.cursor = 'grab';
+    else if (inBottomRightCorner(e.clientX, e.clientY)) box.style.cursor = 'nwse-resize';
+    else box.style.cursor = 'default';
   });
 
-  box.addEventListener("pointerdown", e => {
+  box.addEventListener('pointerdown', e => {
+    // make sure pointer events go to this element even if pointer leaves
+    try { box.setPointerCapture(e.pointerId); } catch (_) {}
+
     const rect = box.getBoundingClientRect();
     const offsetY = e.clientY - rect.top;
 
-    document.body.style.userSelect = "none";
+    // prepare stable layout values (do not reset width/height each click)
+    // convert to px values if not already
+    if (!box.style.left) box.style.left = rect.left + 'px';
+    if (!box.style.top) box.style.top = rect.top + 'px';
+    if (!box.style.width) box.style.width = rect.width + 'px';
+    if (!box.style.height) box.style.height = rect.height + 'px';
 
-    // DRAGGING
+    document.body.style.userSelect = 'none';
+    disableIframes();
+
+    // DRAG (top bar)
     if (offsetY <= DRAG_HEIGHT) {
       isDragging = true;
-
-      // ZERO OFFSET DRAG
-      dragOffsetX = e.clientX - rect.left;
+      dragOffsetX = e.clientX - rect.left; // keep exact grabbed point
       dragOffsetY = e.clientY - rect.top;
-
-      box.style.cursor = "grabbing";
+      box.style.cursor = 'grabbing';
       return;
     }
 
-    // RESIZING (BOTTOM RIGHT ONLY)
-    if (isInBottomRight(e)) {
+    // RESIZE (only bottom-right)
+    if (inBottomRightCorner(e.clientX, e.clientY)) {
       isResizing = true;
-
       startWidth = rect.width;
       startHeight = rect.height;
       startMouseX = e.clientX;
       startMouseY = e.clientY;
-
-      box.style.cursor = "nwse-resize";
+      box.style.cursor = 'nwse-resize';
       return;
     }
+
+    // otherwise ignore
+    // ensure pointer capture is released if nothing started
+    try { box.releasePointerCapture(e.pointerId); } catch (_) {}
+    enableIframes();
+    document.body.style.userSelect = '';
   });
 
-  document.addEventListener("pointermove", e => {
-    // DRAGGING
+  // Global pointermove while dragging/resizing
+  document.addEventListener('pointermove', e => {
     if (isDragging) {
+      // compute new top-left so the grabbed point stays under the mouse
       let newLeft = e.clientX - dragOffsetX;
       let newTop = e.clientY - dragOffsetY;
 
-      box.style.left = newLeft + "px";
-      box.style.top = newTop + "px";
+      // clamp to viewport
+      newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - box.offsetWidth));
+      newTop = Math.max(0, Math.min(newTop, window.innerHeight - box.offsetHeight));
+
+      box.style.left = Math.round(newLeft) + 'px';
+      box.style.top = Math.round(newTop) + 'px';
+      return;
     }
 
-    // RESIZING
     if (isResizing) {
-      // ZERO OFFSET RESIZE
-      let newWidth = startWidth + (e.clientX - startMouseX);
-      let newHeight = startHeight + (e.clientY - startMouseY);
+      // zero-offset resize relative to pointerdown
+      const deltaX = e.clientX - startMouseX;
+      const deltaY = e.clientY - startMouseY;
 
-      newWidth = Math.max(50, newWidth);
-      newHeight = Math.max(50, newHeight);
+      let newW = Math.max(MIN_W, Math.round(startWidth + deltaX));
+      let newH = Math.max(MIN_H, Math.round(startHeight + deltaY));
 
-      box.style.width = newWidth + "px";
-      box.style.height = newHeight + "px";
+      // clamp to viewport so it doesn't grow outside
+      const boxLeft = parseFloat(getComputedStyle(box).left || 0);
+      newW = Math.min(newW, Math.max(MIN_W, window.innerWidth - boxLeft));
+      newH = Math.min(newH, Math.max(MIN_H, window.innerHeight - (parseFloat(getComputedStyle(box).top || 0))));
+
+      box.style.width = newW + 'px';
+      box.style.height = newH + 'px';
+    }
+  }, { passive: true });
+
+  // End drag/resize
+  document.addEventListener('pointerup', e => {
+    if (isDragging || isResizing) {
+      try { box.releasePointerCapture(e.pointerId); } catch (_) {}
+      isDragging = false;
+      isResizing = false;
+      document.body.style.userSelect = '';
+      enableIframes();
+      box.style.cursor = 'default';
     }
   });
 
-  document.addEventListener("pointerup", () => {
-    isDragging = false;
-    isResizing = false;
-    document.body.style.userSelect = "";
+  // also handle cancel (e.g. touchcancel)
+  document.addEventListener('pointercancel', e => {
+    if (isDragging || isResizing) {
+      try { box.releasePointerCapture(e.pointerId); } catch (_) {}
+      isDragging = false;
+      isResizing = false;
+      document.body.style.userSelect = '';
+      enableIframes();
+      box.style.cursor = 'default';
+    }
   });
 });
 </script>
+
 
 
 
