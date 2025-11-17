@@ -1894,27 +1894,49 @@ windows.forEach(win=>{
     if (cs.transform && cs.transform!=='none') win.style.transform='none';
   }
 
+  // --- MODIFIED: Only allow resizing on the bottom edge and bottom corners (S, SE, SW) ---
   function getResizeDir(e) {
     const r = win.getBoundingClientRect();
     const x=e.clientX-r.left, y=e.clientY-r.top;
     let dir='';
-    if (y<RESIZE_EDGE) dir+='n';
-    if (y>r.height-RESIZE_EDGE) dir+='s';
-    if (x<RESIZE_EDGE) dir+='w';
-    if (x>r.width-RESIZE_EDGE) dir+='e';
+    
+    // Check for bottom resize (South)
+    if (y > r.height - RESIZE_EDGE) {
+      dir += 's';
+      // Check for bottom-right (SouthEast)
+      if (x > r.width - RESIZE_EDGE) dir += 'e';
+      // Check for bottom-left (SouthWest)
+      else if (x < RESIZE_EDGE) dir += 'w';
+    }
+    
+    // Original logic for other edges is removed:
+    // if (y<RESIZE_EDGE) dir+='n'; // Removed N
+    // if (x<RESIZE_EDGE) dir+='w'; // Only allow W if S is present (SW)
+    // if (x>r.width-RESIZE_EDGE) dir+='e'; // Only allow E if S is present (SE)
+    
     return dir;
   }
+  // ------------------------------------------------------------------------------------------
 
   // cursor feedback
   win.addEventListener('pointermove', e=>{
     if (dragging||resizing) return;
     const dir=getResizeDir(e);
-    const cursors={n:'ns-resize',s:'ns-resize',e:'ew-resize',w:'ew-resize',
-                   ne:'nesw-resize',sw:'nesw-resize',nw:'nwse-resize',se:'nwse-resize'};
-    if (dir) {win.style.cursor=cursors[dir]||'default'; return;}
+    const cursors={s:'ns-resize', se:'nwse-resize', sw:'nesw-resize'}; // Only necessary cursors
+    
+    if (dir) {
+      win.style.cursor=cursors[dir]||'default'; 
+      return;
+    }
+    
     const r=win.getBoundingClientRect();
-    if (e.clientY-r.top<=DRAG_HEIGHT) win.style.cursor='grab';
-    else win.style.cursor='default';
+    // --- MODIFIED: Only allow dragging on the top section (DRAG_HEIGHT) ---
+    if (e.clientY - r.top <= DRAG_HEIGHT) {
+      win.style.cursor='grab';
+    } else {
+      win.style.cursor='default';
+    }
+    // -----------------------------------------------------------------------
   });
 
   win.addEventListener('pointerdown', e=>{
@@ -1922,12 +1944,16 @@ windows.forEach(win=>{
     const rect = win.getBoundingClientRect();
     const dir = getResizeDir(e);
     normalizePosition();
+    
+    // Check for resize start
     if (dir) {
       resizing=true; resizeDir=dir;
       start={startX:e.clientX,startY:e.clientY,startW:win.offsetWidth,
              startH:win.offsetHeight,startL:win.offsetLeft,startT:win.offsetTop};
       win.setPointerCapture(e.pointerId); e.preventDefault(); return;
     }
+    
+    // --- MODIFIED: Check for drag start (only if not resizing and within DRAG_HEIGHT) ---
     if (e.clientY-rect.top<=DRAG_HEIGHT) {
       dragging=true;
       grabOffset.x=e.clientX-win.offsetLeft;
@@ -1936,6 +1962,7 @@ windows.forEach(win=>{
       win.style.cursor='grabbing';
       e.preventDefault();
     }
+    // -----------------------------------------------------------------------------------
   });
 
   document.addEventListener('pointermove', e=>{
@@ -1949,16 +1976,27 @@ windows.forEach(win=>{
     if (resizing) {
       const dx=e.clientX-start.startX, dy=e.clientY-start.startY;
       let newW=start.startW,newH=start.startH,newL=start.startL,newT=start.startT;
+      
+      // The resize logic below handles all directions, but since getResizeDir only 
+      // returns 's', 'se', or 'sw', only those cases will actually execute here.
       if (resizeDir.includes('e')) newW=start.startW+dx;
       if (resizeDir.includes('s')) newH=start.startH+dy;
+      
+      // The W and N resize logic should not be needed based on the request,
+      // but keeping it with the `resizeDir` check ensures clean code.
+      // Since 'w' is only included with 's' (as 'sw'), this only allows SW resizing.
       if (resizeDir.includes('w')) {newW=start.startW-dx; newL=start.startL+dx;}
+      // Since 'n' is never included, this block is skipped, preventing top resizing.
       if (resizeDir.includes('n')) {newH=start.startH-dy; newT=start.startT+dy;}
+      
+      // Min/Max width/height constraints
       if (newW<MIN_W){if(resizeDir.includes('w')) newL=start.startL+(start.startW-MIN_W); newW=MIN_W;}
       if (newH<MIN_H){if(resizeDir.includes('n')) newT=start.startT+(start.startH-MIN_H); newH=MIN_H;}
       if (newL<0){if(resizeDir.includes('w')){newW+=newL; newL=0;} else newL=0;}
       if (newT<0){if(resizeDir.includes('n')){newH+=newT; newT=0;} else newT=0;}
       if (newL+newW>window.innerWidth) newW=Math.max(MIN_W,window.innerWidth-newL);
       if (newT+newH>window.innerHeight) newH=Math.max(MIN_H,window.innerHeight-newT);
+      
       win.style.width=Math.round(newW)+'px';
       win.style.height=Math.round(newH)+'px';
       win.style.left=Math.round(newL)+'px';
@@ -1978,7 +2016,7 @@ windows.forEach(win=>{
 
 
 
-<!--FIXED SCRIP 8-->
+<!--FIXED SCRIP 9-->
 
 
 
