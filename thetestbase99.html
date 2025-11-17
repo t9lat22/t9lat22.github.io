@@ -1900,33 +1900,33 @@ divs.forEach(box => {
     const offsetYInDiv = e.clientY - rect.top;
     const corner = checkBottomCorner(e);
 
+    // ---- FIX: use offsetLeft / offsetTop so the mouse doesn't drift ----
+    const realLeft = box.offsetLeft;
+    const realTop = box.offsetTop;
+
     if (offsetYInDiv <= DRAG_HEIGHT) {
       isDragging = true;
       document.body.style.userSelect = 'none';
       box.style.cursor = 'grabbing';
-      dragOffsetX = e.clientX - rect.left;
-      dragOffsetY = e.clientY - rect.top;
+
+      dragOffsetX = e.clientX - realLeft;
+      dragOffsetY = e.clientY - realTop;
+
       box.setPointerCapture(e.pointerId);
     }
     else if (corner) {
       isResizing = true;
       document.body.style.userSelect = 'none';
       resizingCorner = corner;
-      
-      box.style.inset = 'auto';
-      box.style.margin = '0';
-      box.style.left = rect.left + 'px';
-      box.style.top = rect.top + 'px';
-      box.style.width = rect.width + 'px';
-      box.style.height = rect.height + 'px';
-      
-      startLeft = rect.left;
-      startTop = rect.top;
-      startWidth = rect.width;
-      startHeight = rect.height;
+
+      startLeft = realLeft;
+      startTop = realTop;
+      startWidth = box.offsetWidth;
+      startHeight = box.offsetHeight;
+
       pointerDownX = e.clientX;
       pointerDownY = e.clientY;
-      box.style.cursor = 'nwse-resize';
+
       box.setPointerCapture(e.pointerId);
     }
   });
@@ -1935,19 +1935,21 @@ divs.forEach(box => {
     if (isDragging) {
       let newX = e.clientX - dragOffsetX;
       let newY = e.clientY - dragOffsetY;
+
       newX = Math.max(0, Math.min(newX, window.innerWidth - box.offsetWidth));
       newY = Math.max(0, Math.min(newY, window.innerHeight - box.offsetHeight));
+
       box.style.left = newX + 'px';
       box.style.top = newY + 'px';
     }
 
     if (isResizing) {
+      const deltaX = e.clientX - pointerDownX;
+      const deltaY = e.clientY - pointerDownY;
+
       let newWidth = startWidth;
       let newHeight = startHeight;
       let newLeft = startLeft;
-
-      const deltaX = e.clientX - pointerDownX;
-      const deltaY = e.clientY - pointerDownY;
 
       if (resizingCorner === 'br') {
         newWidth = Math.max(50, startWidth + deltaX);
@@ -1964,7 +1966,7 @@ divs.forEach(box => {
     }
   });
 
-  document.addEventListener('pointerup', (e) => {
+  document.addEventListener('pointerup', e => {
     if (isDragging || isResizing) {
       box.releasePointerCapture(e.pointerId);
     }
@@ -1974,9 +1976,10 @@ divs.forEach(box => {
     document.body.style.userSelect = '';
   });
 });
-</script></script>
+</script>
 
-<!--FIXED SCRIPT 2-->
+
+<!--FIXED SCRIP 3-->
 
 
 
