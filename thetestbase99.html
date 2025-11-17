@@ -1854,7 +1854,7 @@ if (selectedBackground) {
 
 <script>
 const DRAG_HEIGHT = 50;
-const RESIZE_EDGE = 12; // The pixel size of the corner hot-spot
+const RESIZE_EDGE = 12; 
 const MIN_W = 180;
 const MIN_H = 120;
 
@@ -1877,8 +1877,7 @@ function parseTranslate(transform) {
   return [0,0];
 }
 
-// *** THIS IS THE ANTI-JUMP FUNCTION ***
-// It runs ONLY on the first mouse-move of a drag/resize
+// Function to convert centering CSS into a stable left/top position
 function normalizePosition(win) {
   const cs = getComputedStyle(win);
   const rect = win.getBoundingClientRect();
@@ -1903,22 +1902,19 @@ windows.forEach(win => {
   let dragging=false, resizing=false, resizeDir='';
   let start={};
   let grabOffset={x:0,y:0};
-  let isPointerDown = false; // Flag for tracking the click
+  let isPointerDown = false; 
 
-  // *** RESIZE FIX: Only allow resizing on the bottom corners (SW and SE) ***
+  // RESIZE: Only allow resizing on the bottom corners (SW and SE)
   function getResizeDir(e) {
     const r = win.getBoundingClientRect();
     const x = e.clientX - r.left;
     const y = e.clientY - r.top;
     
-    // Check if cursor is in the bottom resize zone
     if (y > r.height - RESIZE_EDGE) {
-      // Check for bottom-right (SE)
       if (x > r.width - RESIZE_EDGE) return 'se';
-      // Check for bottom-left (SW)
       if (x < RESIZE_EDGE) return 'sw';
     }
-    return ''; // Not in a corner
+    return '';
   }
 
   // Cursor feedback
@@ -1947,13 +1943,12 @@ windows.forEach(win => {
     const dir = getResizeDir(e);
     const isDragZone = (e.clientY - rect.top <= DRAG_HEIGHT);
     
-    // Check if it's a drag or resize, otherwise do nothing
     if (dir) {
       resizing=true; resizeDir=dir;
     } else if (isDragZone) {
       dragging=true;
     } else {
-      return; // This is a tap in the middle. DO NOTHING.
+      return; 
     }
     
     isPointerDown = true;
@@ -1962,22 +1957,22 @@ windows.forEach(win => {
   });
 
   document.addEventListener('pointermove', e=>{
-    // Only run if we are actively dragging/resizing
     if (!isPointerDown) return; 
 
-    // *** THE REAL ANTI-JUMP FIX ***
-    // On the very first pixel of movement, we normalize the position.
-    // This stops the jump and fixes the drag-start glitch.
+    // *** ANTI-JUMP / OFFSET FIX: Only runs on the first move ***
     if (!win.dataset.normalized) {
+      // 1. Normalize position based on where it currently is visually
       normalizePosition(win); 
 
-      // Now that it's normalized, calculate the *correct* start offsets
+      // 2. Calculate offsets using the reliable client position and the new style.left/top
       if (dragging) {
-        grabOffset.x=e.clientX - win.offsetLeft;
-        grabOffset.y=e.clientY - win.offsetTop;
+        // Correct calculation: Mouse position minus the window's style position
+        grabOffset.x = e.clientX - win.offsetLeft; 
+        grabOffset.y = e.clientY - win.offsetTop;
         win.style.cursor='grabbing';
       }
       if (resizing) {
+        // Recalculate start properties based on the now-normalized position
         start={startX:e.clientX,startY:e.clientY,startW:win.offsetWidth,
                startH:win.offsetHeight,startL:win.offsetLeft,startT:win.offsetTop};
       }
@@ -2037,7 +2032,6 @@ windows.forEach(win => {
     if (isPointerDown) {
       try { win.releasePointerCapture(e.pointerId); } catch {}
     }
-    // Reset all flags
     isPointerDown = false;
     dragging=false; 
     resizing=false; 
@@ -2051,7 +2045,7 @@ windows.forEach(win => {
 
 
 
-<!--FIXED SCRIP 16-->
+<!--FIXED SCRIP 17-->
 
 
 
