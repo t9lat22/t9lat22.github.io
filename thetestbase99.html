@@ -1853,7 +1853,7 @@ if (selectedBackground) {
 
 
 <script>
-const DRAG_HEIGHT = 50;
+const DRAG_HEIGHT = 20; // bottom area draggable height
 const RESIZE_MARGIN = 10;
 
 const divs = [
@@ -1899,7 +1899,7 @@ divs.forEach(box => {
         const dir = getResizeDirection(e);
 
         if (dir) box.style.cursor = dir + '-resize';
-        else if (offsetYInDiv <= DRAG_HEIGHT) box.style.cursor = 'grab';
+        else if (offsetYInDiv >= rect.height - DRAG_HEIGHT) box.style.cursor = 'grab'; // bottom draggable
         else box.style.cursor = 'default';
     });
 
@@ -1928,8 +1928,8 @@ divs.forEach(box => {
 
             box.style.width = startWidth + 'px';
             box.style.height = startHeight + 'px';
-        } else if (offsetYInDiv <= DRAG_HEIGHT) {
-            // Start dragging
+        } else if (offsetYInDiv >= rect.height - DRAG_HEIGHT) {
+            // Start dragging from bottom
             isDragging = true;
             offsetX = e.clientX - rect.left;
             offsetY = offsetYInDiv;
@@ -1970,7 +1970,6 @@ divs.forEach(box => {
                 newTop = startTop + deltaY;
             }
 
-            // Minimum size
             newWidth = Math.max(50, newWidth);
             newHeight = Math.max(50, newHeight);
 
@@ -1988,6 +1987,7 @@ divs.forEach(box => {
     });
 });
 </script>
+
 
 
 
