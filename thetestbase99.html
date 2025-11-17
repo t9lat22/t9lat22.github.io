@@ -1853,185 +1853,222 @@ if (selectedBackground) {
 
 
 <script>
-const DRAG_HEIGHT = 50; 
+/*
+  Universal no-offset drag + Windows-11 style resize for listed divs.
+  Works even if the element starts with:
+    position: fixed; inset: 0; margin: auto; transform: translate(...);
+  Does not modify your stylesheet; only sets inline styles at runtime.
+*/
+
+const DRAG_HEIGHT = 50;   // top area used as title bar
+const RESIZE_EDGE = 12;  // px thickness of resize zone
 const MIN_W = 180;
 const MIN_H = 120;
 
-const divs = [
-  document.getElementById('settingsDiv'),
-  document.getElementById('aiDiv'),
-  document.getElementById('hiddenDiv'),
-  document.getElementById('updateDiv'),
-  document.getElementById('searchDiv'),
-  document.getElementById('ChatDiv')
-];
+const ids = ['settingsDiv','aiDiv','hiddenDiv','updateDiv','searchDiv','ChatDiv'];
+const windows = ids.map(id => document.getElementById(id)).filter(Boolean);
 
-divs.forEach(win => {
+function parseTranslate(transform) {
+  // returns [tx, ty] in px for 2D matrix or translate(...)
+  if (!transform || transform === 'none') return [0,0];
+  // formats to handle: matrix(a,b,c,d,e,f) or translate(x,y)
+  const m = transform.match(/matrix\(([^)]+)\)/);
+  if (m) {
+    const parts = m[1].split(',').map(s => parseFloat(s.trim()));
+    // e = parts[4], f = parts[5]
+    return [parts[4] || 0, parts[5] || 0];
+  }
+  const t = transform.match(/translate\(([^)]+)\)/);
+  if (t) {
+    const parts = t[1].split(',').map(s => parseFloat(s.trim()));
+    return [parts[0] || 0, parts[1] || 0];
+  }
+  return [0,0];
+}
 
-    let dragging = false;
-    let resizing = false;
-    let resizeDir = ""; 
-    let offsetX = 0, offsetY = 0;
-    let startX = 0, startY = 0;
-    let startW = 0, startH = 0;
-    let startL = 0, startT = 0;
+windows.forEach(win => {
+  let dragging = false;
+  let resizing = false;
+  let resizeDir = '';
+  let start = {}; // holds startX/startY/startW/startH/startL/startT
+  let grabOffset = {x:0,y:0};
 
-    // convert inset/margin auto to real left/top to avoid drag offset
-    function normalizePosition() {
-        if (win.style.inset === "auto") return;
-        const rect = win.getBoundingClientRect();
-        win.style.left = rect.left + "px";
-        win.style.top = rect.top + "px";
-        win.style.inset = "auto";
-        win.style.margin = "0";
+  // Convert centered CSS (inset:0;margin:auto) and incorporate transforms
+  function normalizePosition() {
+    const cs = getComputedStyle(win);
+    // if already normalized (we set inset to auto), skip
+    if (win.style.inset === 'auto') return;
+
+    const rect = win.getBoundingClientRect();
+    const transform = cs.transform;
+    const [tx, ty] = parseTranslate(transform);
+
+    // position fixed uses viewport coords — use rect.left/top
+    const left = rect.left + tx;
+    const top  = rect.top  + ty;
+
+    // set inline styles to lock visual position, then remove transform/inset/margin
+    win.style.left = Math.round(left) + 'px';
+    win.style.top  = Math.round(top)  + 'px';
+    win.style.inset = 'auto';
+    win.style.margin = '0';
+    if (transform && transform !== 'none') {
+      // remove transform after accounting for it so layout doesn't jump
+      win.style.transform = 'none';
+    }
+  }
+
+  function getResizeDirection(e) {
+    const r = win.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+    let dir = '';
+    if (y < RESIZE_EDGE) dir += 'n';
+    if (y > r.height - RESIZE_EDGE) dir += 's';
+    if (x < RESIZE_EDGE) dir += 'w';
+    if (x > r.width - RESIZE_EDGE) dir += 'e';
+    return dir;
+  }
+
+  // cursor update
+  win.addEventListener('pointermove', e => {
+    if (dragging || resizing) return;
+    const dir = getResizeDirection(e);
+    const cursors = {
+      'n':'ns-resize','s':'ns-resize','e':'ew-resize','w':'ew-resize',
+      'ne':'nesw-resize','sw':'nesw-resize','nw':'nwse-resize','se':'nwse-resize'
+    };
+    if (dir) {
+      win.style.cursor = cursors[dir] || 'default';
+      return;
+    }
+    const r = win.getBoundingClientRect();
+    if (e.clientY - r.top <= DRAG_HEIGHT) win.style.cursor = 'grab';
+    else win.style.cursor = 'default';
+  });
+
+  win.addEventListener('pointerdown', e => {
+    // left button only
+    if (e.button !== 0) return;
+
+    const rect = win.getBoundingClientRect();
+    const dir = getResizeDirection(e);
+
+    // ensure position locked and transform applied before interaction
+    normalizePosition();
+
+    // start resizing if in edge zone
+    if (dir) {
+      resizing = true;
+      resizeDir = dir;
+      start = {
+        startX: e.clientX, startY: e.clientY,
+        startW: win.offsetWidth, startH: win.offsetHeight,
+        startL: win.offsetLeft, startT: win.offsetTop
+      };
+      win.setPointerCapture(e.pointerId);
+      e.preventDefault();
+      return;
     }
 
-    // detect Windows 11 style resize zones
-    function getResizeDir(e) {
-        const r = win.getBoundingClientRect();
-        const x = e.clientX - r.left;
-        const y = e.clientY - r.top;
-        const edge = 12; // thickness of resize zone
+    // start dragging only when clicked in the top bar zone
+    if (e.clientY - rect.top <= DRAG_HEIGHT) {
+      dragging = true;
+      grabOffset.x = e.clientX - win.offsetLeft;
+      grabOffset.y = e.clientY - win.offsetTop;
+      win.setPointerCapture(e.pointerId);
+      win.style.cursor = 'grabbing';
+      e.preventDefault();
+      return;
+    }
+  });
 
-        let dir = "";
+  document.addEventListener('pointermove', e => {
+    if (dragging) {
+      // compute new position (viewport coords, consistent)
+      let nx = e.clientX - grabOffset.x;
+      let ny = e.clientY - grabOffset.y;
 
-        if (y < edge) dir += "n";
-        if (y > r.height - edge) dir += "s";
-        if (x < edge) dir += "w";
-        if (x > r.width - edge) dir += "e";
+      // clamp to viewport
+      nx = Math.max(0, Math.min(nx, window.innerWidth - win.offsetWidth));
+      ny = Math.max(0, Math.min(ny, window.innerHeight - win.offsetHeight));
 
-        return dir; // ex: "n", "e", "nw", "se"
+      win.style.left = Math.round(nx) + 'px';
+      win.style.top  = Math.round(ny) + 'px';
+      return;
     }
 
-    // cursor change on hover
-    win.addEventListener("pointermove", e => {
-        if (dragging || resizing) return;
-        const dir = getResizeDir(e);
+    if (resizing) {
+      const dx = e.clientX - start.startX;
+      const dy = e.clientY - start.startY;
 
-        const cursors = {
-            "n": "ns-resize",
-            "s": "ns-resize",
-            "e": "ew-resize",
-            "w": "ew-resize",
-            "ne": "nesw-resize",
-            "sw": "nesw-resize",
-            "nw": "nwse-resize",
-            "se": "nwse-resize"
-        };
+      let newW = start.startW;
+      let newH = start.startH;
+      let newL = start.startL;
+      let newT = start.startT;
 
-        win.style.cursor = cursors[dir] || "default";
+      if (resizeDir.includes('e')) newW = start.startW + dx;
+      if (resizeDir.includes('s')) newH = start.startH + dy;
+      if (resizeDir.includes('w')) {
+        newW = start.startW - dx;
+        newL = start.startL + dx;
+      }
+      if (resizeDir.includes('n')) {
+        newH = start.startH - dy;
+        newT = start.startT + dy;
+      }
 
-        // top bar dragging
-        const rect = win.getBoundingClientRect();
-        if (!dir && e.clientY - rect.top <= DRAG_HEIGHT) {
-            win.style.cursor = "grab";
-        }
-    });
+      // enforce minimums and adjust left/top if hitting min
+      if (newW < MIN_W) {
+        if (resizeDir.includes('w')) newL = start.startL + (start.startW - MIN_W);
+        newW = MIN_W;
+      }
+      if (newH < MIN_H) {
+        if (resizeDir.includes('n')) newT = start.startT + (start.startH - MIN_H);
+        newH = MIN_H;
+      }
 
-    // pointer down
-    win.addEventListener("pointerdown", e => {
-        const rect = win.getBoundingClientRect();
-        const dir = getResizeDir(e);
+      // keep inside viewport (simple clamping)
+      if (newL < 0) {
+        if (resizeDir.includes('w')) {
+          newW = newW + newL; // reduce width by overflow
+          newL = 0;
+        } else newL = 0;
+      }
+      if (newT < 0) {
+        if (resizeDir.includes('n')) {
+          newH = newH + newT;
+          newT = 0;
+        } else newT = 0;
+      }
+      if (newL + newW > window.innerWidth) newW = Math.max(MIN_W, window.innerWidth - newL);
+      if (newT + newH > window.innerHeight) newH = Math.max(MIN_H, window.innerHeight - newT);
 
-        normalizePosition();
+      win.style.width = Math.round(newW) + 'px';
+      win.style.height = Math.round(newH) + 'px';
+      win.style.left = Math.round(newL) + 'px';
+      win.style.top = Math.round(newT) + 'px';
+    }
+  });
 
-        // Start resizing
-        if (dir !== "") {
-            resizing = true;
-            resizeDir = dir;
+  document.addEventListener('pointerup', e => {
+    if (dragging || resizing) {
+      try { win.releasePointerCapture(e.pointerId); } catch(_) {}
+    }
+    dragging = false;
+    resizing = false;
+    resizeDir = '';
+    win.style.cursor = 'default';
+  });
 
-            startX = e.clientX;
-            startY = e.clientY;
-            startW = win.offsetWidth;
-            startH = win.offsetHeight;
-            startL = win.offsetLeft;
-            startT = win.offsetTop;
-
-            win.setPointerCapture(e.pointerId);
-            return;
-        }
-
-        // Start dragging from top
-        if (e.clientY - rect.top <= DRAG_HEIGHT) {
-            dragging = true;
-            offsetX = e.clientX - win.offsetLeft;
-            offsetY = e.clientY - win.offsetTop;
-            win.style.cursor = "grabbing";
-
-            win.setPointerCapture(e.pointerId);
-        }
-    });
-
-    // pointer move (drag + resize)
-    document.addEventListener("pointermove", e => {
-
-        // DRAGGING
-        if (dragging) {
-            let newX = e.clientX - offsetX;
-            let newY = e.clientY - offsetY;
-
-            // stay inside screen
-            newX = Math.max(0, Math.min(newX, window.innerWidth - win.offsetWidth));
-            newY = Math.max(0, Math.min(newY, window.innerHeight - win.offsetHeight));
-
-            win.style.left = newX + "px";
-            win.style.top = newY + "px";
-        }
-
-        // RESIZING (like Windows 11)
-        if (resizing) {
-            let dx = e.clientX - startX;
-            let dy = e.clientY - startY;
-
-            let newW = startW;
-            let newH = startH;
-            let newL = startL;
-            let newT = startT;
-
-            if (resizeDir.includes("e")) newW = startW + dx;
-            if (resizeDir.includes("s")) newH = startH + dy;
-
-            if (resizeDir.includes("w")) {
-                newW = startW - dx;
-                newL = startL + dx;
-            }
-            if (resizeDir.includes("n")) {
-                newH = startH - dy;
-                newT = startT + dy;
-            }
-
-            // minimum sizes
-            if (newW < MIN_W) {
-                newW = MIN_W;
-                if (resizeDir.includes("w")) newL = startL + (startW - MIN_W);
-            }
-            if (newH < MIN_H) {
-                newH = MIN_H;
-                if (resizeDir.includes("n")) newT = startT + (startH - MIN_H);
-            }
-
-            win.style.width = newW + "px";
-            win.style.height = newH + "px";
-            win.style.left = newL + "px";
-            win.style.top = newT + "px";
-        }
-    });
-
-    // pointer up
-    document.addEventListener("pointerup", e => {
-        if (dragging || resizing) {
-            try { win.releasePointerCapture(e.pointerId); } catch {}
-        }
-        dragging = false;
-        resizing = false;
-        resizeDir = "";
-    });
-
+  // prevent accidental text selection while dragging
+  win.addEventListener('dragstart', e => e.preventDefault());
 });
 </script>
 
 
-<!--FIXED SCRIP 6-->
+
+<!--FIXED SCRIP 7-->
 
 
 
