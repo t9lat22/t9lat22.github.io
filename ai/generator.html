@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>T9 AI Image Generator</title>
+
+<style>
+:root{
+  --bg:#0d0e11;
+  --panel:#1a1c21;
+  --panel-light:#23252b;
+  --accent:#4a7bff;
+  --accent2:#365bd1;
+  --text:#e9e9e9;
+  --muted:#b7b7b7;
+  --slot-h:520px;
+  --radius:12px;
+  --shadow:0 6px 22px rgba(0,0,0,0.35);
+}
+
+html,body{
+  margin:0;
+  background:var(--bg);
+  font-family:Inter,Arial;
+  color:var(--text);
+}
+
+.container{
+  max-width:1000px;
+  margin:24px auto;
+  padding:16px;
+}
+
+.title{
+  font-size:26px;
+  font-weight:800;
+  margin-bottom:20px;
+  letter-spacing:0.5px;
+  color:white;
+  text-shadow:0 0 12px rgba(74,123,255,0.25);
+}
+
+/* TOP ROW */
+.top-row{
+  display:flex;
+  gap:16px;
+}
+
+/* PROMPT INPUT */
+#prompt{
+  flex:1;
+  height:100px;
+  background:var(--panel);
+  border:1px solid #2c2f36;
+  padding:14px;
+  border-radius:var(--radius);
+  color:var(--text);
+  resize:none;
+  outline:none;
+  font-size:15px;
+  box-shadow:var(--shadow);
+  transition:0.2s;
+}
+#prompt:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 2px rgba(74,123,255,0.3);
+}
+
+/* RIGHT COLUMN */
+.right{
+  width:260px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.control{
+  height:60px;
+  border-radius:var(--radius);
+  background:var(--panel-light);
+  border:1px solid #3a3d45;
+  color:var(--text);
+  padding:12px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  transition:0.15s;
+  box-shadow:var(--shadow);
+}
+
+#generate{
+  background:var(--accent);
+  border:none;
+  color:white;
+}
+#generate:hover{
+  background:var(--accent2);
+}
+
+#generate:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+.separator{
+  height:2px;
+  background:#2b2d33;
+  margin:26px 0;
+  border-radius:2px;
+}
+
+/* OUTLINE + SLOT */
+.outline{
+  border:3px dashed var(--accent);
+  border-radius:var(--radius);
+  padding:16px;
+}
+
+.slot{
+  background:var(--panel);
+  border-radius:var(--radius);
+  overflow:hidden;
+  height:var(--slot-h);
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  position:relative;
+  box-shadow:inset 0 3px 12px rgba(0,0,0,0.5);
+}
+
+/* LOADING */
+.loader{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.35);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  font-weight:700;
+  gap:10px;
+  backdrop-filter:blur(4px);
+}
+
+.spinner{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  border:5px solid rgba(255,255,255,0.25);
+  border-top-color:white;
+  animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+  to{ transform:rotate(360deg); }
+}
+
+/* IMAGE STYLES */
+.slot img.landscape{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.slot img.others{
+  height:100%;
+  width:auto;
+  object-fit:cover;
+  margin:auto;
+}
+
+/* MOBILE */
+@media(max-width:850px){
+  :root{ --slot-h:360px; }
+  .top-row{ flex-direction:column; }
+  .right{ width:100%; flex-direction:row; }
+  #preset,#generate{ flex:1; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="title">T9 AI Image Generator</div>
+
+  <div class="top-row">
+    <textarea id="prompt" placeholder="Describe your perfect image..."></textarea>
+
+    <div class="right">
+      <select id="preset" class="control">
+        <option value="square" selected>Square (1:1)</option>
+        <option value="landscape">Landscape</option>
+        <option value="portrait">Portrait</option>
+      </select>
+
+      <button id="generate" class="control" disabled>Generate</button>
+    </div>
+  </div>
+
+  <div class="separator"></div>
+
+  <div class="outline">
+    <div class="slot" id="slot"></div>
+  </div>
+</div>
+
+<script>
+/* PRESETS */
+const PRESETS = {
+  square:    { w:1536, h:1536, ratio:1, key:'square' },
+  landscape: { w:1920, h:1080, ratio:16/9, key:'landscape' },
+  portrait:  { w:1080, h:1920, ratio:9/16, key:'portrait' }
+};
+
+const container=document.querySelector('.container');
+const promptEl=document.getElementById('prompt');
+const presetEl=document.getElementById('preset');
+const generateBtn=document.getElementById('generate');
+const slot=document.getElementById('slot');
+
+promptEl.addEventListener('input',()=>{
+  generateBtn.disabled=promptEl.value.trim().length===0;
+});
+
+function updateSlotMaxWidth(){
+  const contW=Math.min(container.clientWidth,1000);
+  slot.style.maxWidth=(contW-40)+"px";
+}
+
+function updateVisualPreset(){
+  const p=PRESETS[presetEl.value];
+  const slotHeight=slot.clientHeight;
+  const preferredWidth=Math.round(slotHeight*p.ratio);
+  const maxWidth=parseInt(getComputedStyle(slot).maxWidth)||slot.clientWidth;
+
+  let finalWidth;
+  if(p.key==="landscape") finalWidth=maxWidth;
+  else finalWidth=Math.min(preferredWidth,Math.round(maxWidth*0.72));
+
+  slot.style.width=finalWidth+"px";
+  slot.innerHTML="";
+}
+
+function buildURL(text,w,h){
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(text)}?width=${w}&height=${h}&nologo=true&enhance=true&model=flux`;
+}
+
+function showLoader(){
+  slot.innerHTML=`
+    <div class="loader">
+      <div class="spinner"></div>
+      <div>Generating...</div>
+    </div>`;
+}
+
+function showImage(url,key){
+  const img=new Image();
+  img.decoding="async";
+  img.alt="Generated image";
+  img.className=key==="landscape" ? "landscape" : "others";
+
+  img.onload=()=>{
+    slot.innerHTML="";
+    slot.appendChild(img);
+    generateBtn.disabled=false;
+  };
+
+  img.onerror=()=>{
+    slot.innerHTML=`<div style="padding:20px;font-weight:700;color:white;">Error loading image.</div>`;
+    generateBtn.disabled=false;
+  };
+
+  img.src=url;
+}
+
+/* Events */
+window.addEventListener('resize',()=>{
+  updateSlotMaxWidth();
+  updateVisualPreset();
+});
+
+presetEl.addEventListener('change',updateVisualPreset);
+
+updateSlotMaxWidth();
+updateVisualPreset();
+
+generateBtn.addEventListener('click',()=>{
+  const text=promptEl.value.trim();
+  if(!text) return;
+
+  const p=PRESETS[presetEl.value];
+
+  updateSlotMaxWidth();
+  updateVisualPreset();
+  showLoader();
+  generateBtn.disabled=true;
+
+  const url=buildURL(text,p.w,p.h);
+  showImage(url,p.key);
+});
+
+promptEl.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){
+    if(!generateBtn.disabled) generateBtn.click();
+  }
+});
+</script>
+
+</body>
+</html>
