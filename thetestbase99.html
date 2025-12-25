@@ -1975,36 +1975,6 @@ function enableDrag() {
 
     win.style.userSelect = "none";
     win.style.cursor = "move";
-
-    function onMouseMove(e) {
-      if (!globalDragging) return;
-
-      let newLeft = startLeft + (e.clientX - startX);
-      let newTop  = startTop  + (e.clientY - startY);
-
-      const maxX = document.documentElement.clientWidth - win.offsetWidth;
-      const maxY = document.documentElement.clientHeight - win.offsetHeight;
-
-      newLeft = Math.max(0, Math.min(newLeft, maxX));
-      newTop  = Math.max(0, Math.min(newTop, maxY));
-
-      win.style.left = newLeft + "px";
-      win.style.top  = newTop + "px";
-    }
-
-    function onMouseUp() {
-      globalDragging = false;
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
-      window.removeEventListener("mouseup", onMouseUp);
-
-      win.style.userSelect = "";
-      win.style.cursor = "";
-    }
-
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
-    window.addEventListener("mouseup", onMouseUp);
   };
 
   win.addEventListener("mousedown", dragListeners.mousedown);
@@ -2012,69 +1982,81 @@ function enableDrag() {
 
 /* ---------- RESIZE ---------- */
 function enableResize() {
+  // Remove old resizer
   const existingResizer = win.querySelector('.resizer');
   if (existingResizer) existingResizer.remove();
 
+  // Create new resizer
   const rz = document.createElement("div");
   rz.className = "resizer";
   rz.style.cssText = "position:absolute;right:0;bottom:0;width:15px;height:15px;cursor:nwse-resize;background:rgba(0,0,0,0.1);z-index:100;";
   win.appendChild(rz);
 
-  if (resizeListeners.mousedown) rz.removeEventListener("mousedown", resizeListeners.mousedown);
-
-  resizeListeners.mousedown = function(e) {
+  // Resize start
+  rz.addEventListener("mousedown", e => {
     e.preventDefault();
     e.stopPropagation();
 
     globalResizing = true;
-    const startWidth = win.offsetWidth;
-    const startHeight = win.offsetHeight;
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startLeft = parseInt(win.style.left) || 0;
-    const startTop = parseInt(win.style.top) || 0;
+    startX = e.clientX;
+    startY = e.clientY;
+    startWidth = win.offsetWidth;
+    startHeight = win.offsetHeight;
+    startLeft = parseInt(win.style.left) || 0;
+    startTop = parseInt(win.style.top) || 0;
 
     document.body.style.userSelect = "none";
-
-    function onMouseMove(e) {
-      if (!globalResizing) return;
-
-      const deltaX = e.clientX - startX;
-      const deltaY = e.clientY - startY;
-
-      let newWidth = startWidth + deltaX;
-      let newHeight = startHeight + deltaY;
-
-      const maxWidth = document.documentElement.clientWidth - startLeft;
-      const maxHeight = document.documentElement.clientHeight - startTop;
-
-      newWidth  = Math.max(100, Math.min(newWidth, maxWidth));
-      newHeight = Math.max(100, Math.min(newHeight, maxHeight));
-
-      win.style.width = newWidth + "px";
-      win.style.height = newHeight + "px";
-    }
-
-    function onMouseUp() {
-      globalResizing = false;
-      document.removeEventListener("mousemove", onMouseMove, true);
-      document.removeEventListener("mouseup", onMouseUp, true);
-      window.removeEventListener("mouseup", onMouseUp, true);
-      window.removeEventListener("blur", onMouseUp, true);
-
-      document.body.style.userSelect = "";
-    }
-
-    document.addEventListener("mousemove", onMouseMove, true);
-    document.addEventListener("mouseup", onMouseUp, true);
-    window.addEventListener("mouseup", onMouseUp, true);
-    window.addEventListener("blur", onMouseUp, true);
-  };
-
-  rz.addEventListener("mousedown", resizeListeners.mousedown);
+  });
 }
 
-/* ---------- WINDOW RESIZE ---------- */
+// Global mousemove — drag & resize
+document.addEventListener("mousemove", e => {
+  // DRAG
+  if (globalDragging) {
+    const startLeft = parseInt(win.style.left) || 0;
+    const startTop = parseInt(win.style.top) || 0;
+    let newLeft = startLeft + (e.clientX - startX);
+    let newTop  = startTop  + (e.clientY - startY);
+
+    const maxX = document.documentElement.clientWidth - win.offsetWidth;
+    const maxY = document.documentElement.clientHeight - win.offsetHeight;
+
+    win.style.left = Math.max(0, Math.min(newLeft, maxX)) + "px";
+    win.style.top  = Math.max(0, Math.min(newTop, maxY)) + "px";
+  }
+
+  // RESIZE
+  if (globalResizing) {
+    let newWidth  = startWidth + (e.clientX - startX);
+    let newHeight = startHeight + (e.clientY - startY);
+
+    const maxWidth  = document.documentElement.clientWidth - startLeft;
+    const maxHeight = document.documentElement.clientHeight - startTop;
+
+    win.style.width  = Math.max(100, Math.min(newWidth, maxWidth)) + "px";
+    win.style.height = Math.max(100, Math.min(newHeight, maxHeight)) + "px";
+  }
+});
+
+// Global mouseup — stop drag & resize
+document.addEventListener("mouseup", () => {
+  if (globalDragging || globalResizing) {
+    globalDragging = false;
+    globalResizing = false;
+    document.body.style.userSelect = "";
+    win.style.cursor = "";
+  }
+});
+
+// Safety: stop if window loses focus
+window.addEventListener("blur", () => {
+  globalDragging = false;
+  globalResizing = false;
+  document.body.style.userSelect = "";
+  win.style.cursor = "";
+});
+
+// Window resize — keep on screen
 window.addEventListener('resize', () => {
   if (!isPositioned) return;
 
@@ -2090,15 +2072,8 @@ window.addEventListener('resize', () => {
     if (top  > maxY) win.style.top  = Math.max(0, maxY) + "px";
   });
 });
-
-/* ---------- GLOBAL MOUSEUP SAFETY ---------- */
-window.addEventListener('mouseup', function() {
-  globalDragging = false;
-  globalResizing = false;
-  win.style.cursor = "";
-  document.body.style.userSelect = "";
-});
 </script>
+
 
 
 
