@@ -1936,7 +1936,7 @@ const watcher = new MutationObserver(() => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
-      // 1. Use absolute positioning relative to document, not viewport
+      // 1. Use absolute positioning
       win.style.top = (rect.top + scrollTop) + "px";
       win.style.left = (rect.left + scrollLeft) + "px";
       
@@ -1944,7 +1944,7 @@ const watcher = new MutationObserver(() => {
       win.style.transform = "none";
       
       // 3. Set positioning
-      win.style.position = "absolute"; // Use absolute instead of fixed for better compatibility
+      win.style.position = "absolute";
       win.style.margin = "0";
       
       // 4. Ensure dimensions are preserved
@@ -1962,9 +1962,7 @@ watcher.observe(win, { attributes: true, attributeFilter: ["style", "class"] });
 function enableDrag() {
   let dragging = false, startX, startY, startLeft, startTop;
 
-  win.addEventListener("mousedown", dragStart);
-
-  function dragStart(e) {
+  const dragStart = (e) => {
     // Prevent dragging if clicking inputs or the resizer
     if (e.target.classList.contains("resizer") || 
         e.target.tagName === "INPUT" || 
@@ -1981,14 +1979,18 @@ function enableDrag() {
     startLeft = parseInt(win.style.left) || 0;
     startTop = parseInt(win.style.top) || 0;
 
+    // Add event listeners to document to capture mouse events even outside the element
     document.addEventListener("mousemove", dragMove);
     document.addEventListener("mouseup", dragEnd);
     
+    // Add a class to indicate dragging
+    win.classList.add('dragging');
+    
     // Prevent text selection during drag
     e.preventDefault();
-  }
+  };
 
-  function dragMove(e) {
+  const dragMove = (e) => {
     if (!dragging) return;
 
     // Calculate new position
@@ -2007,13 +2009,16 @@ function enableDrag() {
 
     win.style.left = newLeft + "px";
     win.style.top = newTop + "px";
-  }
+  };
 
-  function dragEnd() {
+  const dragEnd = (e) => {
     dragging = false;
     document.removeEventListener("mousemove", dragMove);
     document.removeEventListener("mouseup", dragEnd);
-  }
+    win.classList.remove('dragging');
+  };
+
+  win.addEventListener("mousedown", dragStart);
 }
 
 /* ---------- RESIZE ---------- */
@@ -2022,14 +2027,12 @@ function enableResize() {
   rz.className = "resizer";
   win.appendChild(rz);
   
-  // Set style via JS as requested
+  // Set style via JS
   rz.style.cssText = "position:absolute;right:0;bottom:0;width:15px;height:15px;cursor:nwse-resize;background:rgba(0,0,0,0.1);z-index:100;";
 
   let resizing = false, startWidth, startHeight, startX, startY, startLeft, startTop;
 
-  rz.addEventListener("mousedown", resizeStart);
-
-  function resizeStart(e) {
+  const resizeStart = (e) => {
     e.stopPropagation();
     e.preventDefault();
     
@@ -2045,14 +2048,20 @@ function enableResize() {
     startLeft = parseInt(win.style.left) || 0;
     startTop = parseInt(win.style.top) || 0;
 
+    // Add event listeners to document level
     document.addEventListener("mousemove", resizeMove);
     document.addEventListener("mouseup", resizeEnd);
     
-    // Prevent default browser behavior
+    // Add a class to indicate resizing
+    win.classList.add('resizing');
+    
+    // Also add mouseup listener to window for safety
+    window.addEventListener("mouseup", resizeEnd);
+    
     return false;
-  }
+  };
 
-  function resizeMove(e) {
+  const resizeMove = (e) => {
     if (!resizing) return;
 
     // Calculate new size based on mouse movement delta
@@ -2072,13 +2081,35 @@ function enableResize() {
     // Apply new dimensions
     win.style.width = newWidth + "px";
     win.style.height = newHeight + "px";
-  }
+  };
 
-  function resizeEnd() {
+  const resizeEnd = (e) => {
+    if (!resizing) return;
+    
     resizing = false;
+    
+    // Clean up ALL event listeners
     document.removeEventListener("mousemove", resizeMove);
     document.removeEventListener("mouseup", resizeEnd);
-  }
+    window.removeEventListener("mouseup", resizeEnd);
+    
+    win.classList.remove('resizing');
+  };
+
+  rz.addEventListener("mousedown", resizeStart);
+  
+  // Add CSS for visual feedback during drag/resize
+  const style = document.createElement('style');
+  style.textContent = `
+    #hiddenDiv.dragging {
+      cursor: move;
+      user-select: none;
+    }
+    #hiddenDiv.resizing {
+      user-select: none;
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 // Handle window resize to keep element within bounds
