@@ -5,50 +5,55 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>T9 OS Chat</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{height:100vh;display:flex;background:linear-gradient(135deg,#0a0e27 0%,#1a1f3a 100%);color:#e8eaf6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;overflow:hidden}
-  .sidebar{width:280px;background:rgba(15,20,40,0.95);backdrop-filter:blur(10px);border-right:1px solid rgba(100,150,255,0.1);padding:20px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;flex-shrink:0}
-  .sidebar::-webkit-scrollbar{width:6px}
-  .sidebar::-webkit-scrollbar-track{background:transparent}
-  .sidebar::-webkit-scrollbar-thumb{background:rgba(100,150,255,0.3);border-radius:3px}
-  .section-title{color:#6b9fff;font-size:.7rem;margin-top:12px;margin-bottom:4px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
-  .sidebar-item{padding:12px 14px;background:rgba(30,40,70,0.6);border-radius:10px;cursor:pointer;transition:all 0.2s ease;border:1px solid transparent;font-size:.95rem}
-  .sidebar-item:hover{background:rgba(50,70,120,0.7);border-color:rgba(100,150,255,0.2);transform:translateX(2px)}
-  .sidebar-item.active{background:linear-gradient(135deg,#4e8cff 0%,#3a6fd9 100%);border-color:rgba(100,150,255,0.3);box-shadow:0 2px 8px rgba(78,140,255,0.3)}
-  .chat-area{flex:1;display:flex;flex-direction:column;background:rgba(10,15,30,0.5)}
-  .chat-header{padding:18px 24px;background:rgba(15,25,50,0.8);backdrop-filter:blur(10px);border-bottom:1px solid rgba(100,150,255,0.15);font-size:1.15rem;color:#a8c5ff;font-weight:600;letter-spacing:0.3px;flex-shrink:0}
-  .messages{flex:1;overflow:auto;padding:24px;display:flex;flex-direction:column;gap:14px}
-  .messages::-webkit-scrollbar{width:8px}
-  .messages::-webkit-scrollbar-track{background:transparent}
-  .messages::-webkit-scrollbar-thumb{background:rgba(100,150,255,0.3);border-radius:4px}
-  .msg{max-width:65%;animation:slideIn 0.2s ease}
-  @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-  .msg.own{align-self:flex-end}
-  .msg-name{font-size:.75rem;color:#7ea8ff;margin-bottom:5px;font-weight:500}
-  .msg-bubble{background:rgba(30,45,80,0.9);padding:12px 16px;border-radius:12px;color:#e8eaf6;box-shadow:0 2px 6px rgba(0,0,0,0.2);border:1px solid rgba(100,150,255,0.1);line-height:1.5}
-  .msg.own .msg-bubble{background:linear-gradient(135deg,#4e8cff 0%,#5a98ff 100%);color:#fff;border-color:rgba(255,255,255,0.1)}
-  .input-bar{padding:16px 24px;background:rgba(15,25,50,0.9);backdrop-filter:blur(10px);border-top:1px solid rgba(100,150,255,0.15);display:flex;gap:12px;flex-shrink:0}
-  .input-bar input{flex:1;padding:14px 18px;border-radius:24px;background:rgba(30,40,70,0.8);border:1px solid rgba(100,150,255,0.2);color:#e8eaf6;font-size:.95rem;transition:all 0.2s ease}
-  .input-bar input:focus{outline:none;border-color:rgba(100,150,255,0.5);background:rgba(30,40,70,1)}
-  .input-bar input::placeholder{color:rgba(200,210,255,0.4)}
-  .input-bar button{padding:14px 24px;background:linear-gradient(135deg,#4e8cff 0%,#3a6fd9 100%);border:none;border-radius:24px;font-weight:600;color:#fff;cursor:pointer;transition:all 0.2s ease;box-shadow:0 2px 6px rgba(78,140,255,0.3)}
-  .input-bar button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(78,140,255,0.4)}
-  .input-bar button:active{transform:translateY(0)}
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn 0.3s ease}
-  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-  .modal{background:linear-gradient(135deg, rgba(15,25,50,0.98) 0%, rgba(20,30,60,0.98) 100%);border:1px solid rgba(100,150,255,0.3);border-radius:16px;padding:32px;min-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:modalSlide 0.3s ease}
-  @keyframes modalSlide{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
-  .modal h2{color:#a8c5ff;margin-bottom:20px;text-align:center;font-size:1.4rem;font-weight:600}
-  .modal input{width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(100,150,255,0.3);background:rgba(30,40,70,0.8);color:#e8eaf6;margin-bottom:18px;font-size:.95rem;transition:all 0.2s ease}
-  .modal input:focus{outline:none;border-color:rgba(100,150,255,0.6);background:rgba(30,40,70,1)}
-  .modal input::placeholder{color:rgba(200,210,255,0.4)}
-  .modal button{width:100%;padding:14px;background:linear-gradient(135deg,#4e8cff 0%,#3a6fd9 100%);border:none;border-radius:10px;color:#fff;font-weight:600;cursor:pointer;font-size:1rem;transition:all 0.2s ease;box-shadow:0 4px 12px rgba(78,140,255,0.3)}
-  .modal button:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(78,140,255,0.4)}
-  .modal button:active{transform:translateY(0)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{height:100vh;display:flex;background:linear-gradient(135deg,#0a0e27 0%,#1a1f3a 100%);color:#e8eaf6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;overflow:hidden}
+.sidebar{width:280px;background:rgba(15,20,40,0.95);backdrop-filter:blur(10px);border-right:1px solid rgba(100,150,255,0.1);padding:20px;display:flex;flex-direction:column;gap:10px;overflow:auto;flex-shrink:0}
+.sidebar::-webkit-scrollbar{width:6px}
+.sidebar::-webkit-scrollbar-track{background:transparent}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(100,150,255,0.3);border-radius:3px}
+.section-title{color:#6b9fff;font-size:.7rem;margin-top:12px;margin-bottom:4px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+.sidebar-item{padding:12px 14px;background:rgba(30,40,70,0.6);border-radius:10px;cursor:pointer;transition:all 0.2s ease;border:1px solid transparent;font-size:.95rem}
+.sidebar-item:hover{background:rgba(50,70,120,0.7);border-color:rgba(100,150,255,0.2);transform:translateX(2px)}
+.sidebar-item.active{background:linear-gradient(135deg,#4e8cff 0%,#3a6fd9 100%);border-color:rgba(100,150,255,0.3);box-shadow:0 2px 8px rgba(78,140,255,0.3)}
+.chat-area{flex:1;display:flex;flex-direction:column;background:rgba(10,15,30,0.5)}
+.chat-header{padding:18px 24px;background:rgba(15,25,50,0.8);backdrop-filter:blur(10px);border-bottom:1px solid rgba(100,150,255,0.15);font-size:1.15rem;color:#a8c5ff;font-weight:600;letter-spacing:0.3px}
+.messages{flex:1;overflow:auto;padding:24px;display:flex;flex-direction:column;gap:14px}
+.messages::-webkit-scrollbar{width:8px}
+.messages::-webkit-scrollbar-track{background:transparent}
+.messages::-webkit-scrollbar-thumb{background:rgba(100,150,255,0.3);border-radius:4px}
+.msg{max-width:65%;animation:slideIn 0.2s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.msg.own{align-self:flex-end}
+.msg-name{font-size:.75rem;color:#7ea8ff;margin-bottom:5px;font-weight:500}
+.msg-bubble{background:rgba(30,45,80,0.9);padding:12px 16px;border-radius:12px;color:#e8eaf6;box-shadow:0 2px 6px rgba(0,0,0,0.2);border:1px solid rgba(100,150,255,0.1);line-height:1.5}
+.msg.own .msg-bubble{background:linear-gradient(135deg,#4e8cff 0%,#5a98ff 100%);color:#fff;border-color:rgba(255,255,255,0.1)}
+.input-bar{padding:16px 24px;background:rgba(15,25,50,0.9);backdrop-filter:blur(10px);border-top:1px solid rgba(100,150,255,0.15);display:flex;gap:12px}
+.input-bar input{flex:1;padding:14px 18px;border-radius:24px;background:rgba(30,40,70,0.8);border:1px solid rgba(100,150,255,0.2);color:#e8eaf6;font-size:.95rem;transition:all 0.2s ease}
+.input-bar input:focus{outline:none;border-color:rgba(100,150,255,0.5);background:rgba(30,40,70,1)}
+.input-bar input::placeholder{color:rgba(200,210,255,0.4)}
+.input-bar button{padding:14px 24px;background:linear-gradient(135deg,#4e8cff 0%,#3a6fd9 100%);border:none;border-radius:24px;font-weight:600;color:#fff;cursor:pointer;transition:all 0.2s ease;box-shadow:0 2px 6px rgba(78,140,255,0.3)}
+.input-bar button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(78,140,255,0.4)}
+.input-bar button:active{transform:translateY(0)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:linear-gradient(135deg,rgba(15,25,50,0.98) 0%,rgba(20,30,60,0.98) 100%);border:1px solid rgba(100,150,255,0.3);border-radius:16px;padding:32px;min-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:modalSlide 0.3s ease}
+@keyframes modalSlide{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+.modal h2{color:#a8c5ff;margin-bottom:20px;text-align:center;font-size:1.4rem;font-weight:600}
+.modal input{width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(100,150,255,0.3);background:rgba(30,40,70,0.8);color:#e8eaf6;margin-bottom:18px;font-size:.95rem;transition:all 0.2s ease}
+.modal input:focus{outline:none;border-color:rgba(100,150,255,0.6);background:rgba(30,40,70,1)}
+.modal button{width:100%;padding:14px;background:linear-gradient(135deg,#4e8cff 0%,#3a6fd9 100%);border:none;border-radius:10px;color:#fff;font-weight:600;cursor:pointer;font-size:1rem;transition:all 0.2s ease;box-shadow:0 4px 12px rgba(78,140,255,0.3)}
+.modal button:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(78,140,255,0.4)}
+.modal button:active{transform:translateY(0)}
+.room-input{width:100%;padding:10px 14px;margin-top:10px;border-radius:8px;border:1px solid rgba(100,150,255,0.2);background:rgba(20,30,55,0.8);color:#e8eaf6;font-size:.9rem;transition:all 0.2s ease}
+.room-input:focus{outline:none;border-color:rgba(100,150,255,0.5);background:rgba(20,30,55,1)}
+.room-input::placeholder{color:rgba(200,210,255,0.4)}
+.room-btn{width:100%;margin-top:10px;padding:10px;border-radius:8px;background:linear-gradient(135deg,#4e8cff 0%,#3a6fd9 100%);border:none;color:#fff;font-weight:600;cursor:pointer;transition:all 0.2s ease}
+.room-btn:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(78,140,255,0.3)}
 </style>
 </head>
 <body>
 
+<!-- Name Modal -->
 <div id="nameModal" class="modal-overlay">
   <div class="modal">
     <h2>Welcome to T9 OS Chat</h2>
@@ -57,14 +62,26 @@
   </div>
 </div>
 
+<!-- Sidebar -->
 <div class="sidebar">
-  <div class="section-title">Rooms</div>
+  <div class="section-title">Main</div>
   <div id="publicRoomBtn" class="sidebar-item active">🌍 Public</div>
-  <div id="createRoomBtn" class="sidebar-item">➕ Create Room</div>
-  <div id="joinRoomBtn" class="sidebar-item">🔗 Join Room</div>
-  <div id="joinedRooms" class="sidebar-rooms" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;"></div>
+  <div class="section-title">Rooms</div>
+  <div id="roomsList"></div>
+  <div class="section-title">Actions</div>
+  <div id="createBtn" class="sidebar-item">➕ Create Room</div>
+  <div id="joinBtn" class="sidebar-item">🔍 Join Room</div>
+  <div id="createBox" class="hidden">
+    <input id="createInput" class="room-input" placeholder="Room name" />
+    <button id="doCreate" class="room-btn">Create & Join</button>
+  </div>
+  <div id="joinBox" class="hidden">
+    <input id="joinInput" class="room-input" placeholder="Enter room name" />
+    <button id="doJoin" class="room-btn">Join</button>
+  </div>
 </div>
 
+<!-- Chat Area -->
 <div class="chat-area">
   <div class="chat-header" id="roomTitle">Public Chat</div>
   <div id="messages" class="messages"><div style="text-align:center;color:#7ea8ff;opacity:0.7">Welcome to Public Chat</div></div>
@@ -76,7 +93,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded, off } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD74Fi2RKsvv1sXTAEIiTYrRKCv22MRhh8",
@@ -92,22 +109,30 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+// Elements
 const messagesEl = document.getElementById('messages');
 const msgInput = document.getElementById('msgInput');
 const sendBtn = document.getElementById('sendBtn');
+const publicRoomBtn = document.getElementById('publicRoomBtn');
 const roomTitle = document.getElementById('roomTitle');
 const nameModal = document.getElementById('nameModal');
 const nameInput = document.getElementById('nameInput');
 const nameSubmit = document.getElementById('nameSubmit');
-const publicRoomBtn = document.getElementById('publicRoomBtn');
-const createRoomBtn = document.getElementById('createRoomBtn');
-const joinRoomBtn = document.getElementById('joinRoomBtn');
-const joinedRoomsEl = document.getElementById('joinedRooms');
+const createBtn = document.getElementById('createBtn');
+const joinBtn = document.getElementById('joinBtn');
+const createBox = document.getElementById('createBox');
+const joinBox = document.getElementById('joinBox');
+const createInput = document.getElementById('createInput');
+const joinInput = document.getElementById('joinInput');
+const doCreate = document.getElementById('doCreate');
+const doJoin = document.getElementById('doJoin');
+const roomsList = document.getElementById('roomsList');
 
+// User ID
 const ID_KEY = "numericUserID";
 function generateNumericID() {
   const timestamp = Date.now().toString().slice(-6);
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4,'0');
+  const random = Math.floor(Math.random()*10000).toString().padStart(4,'0');
   return random + timestamp;
 }
 let myID = localStorage.getItem(ID_KEY);
@@ -115,99 +140,83 @@ if(!myID){ myID = generateNumericID(); localStorage.setItem(ID_KEY,myID); }
 
 let username = "Anonymous";
 let currentRoom = "public";
-let currentListener = null;
 
+// Escape HTML
 function escapeHtml(s){ return (s+'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
 
+// Append message
 function appendMessage(payload){
   const div = document.createElement('div');
   div.className = 'msg' + ((payload.id === myID) ? ' own' : '');
-  const displayName = payload.name ? `${payload.name}` : 'Anon';
+  const displayName = payload.name ? `${payload.name} (${payload.id})` : 'Anon';
   div.innerHTML = `<div class="msg-name">${escapeHtml(displayName)}</div>
                    <div class="msg-bubble">${escapeHtml(payload.text)}</div>`;
   messagesEl.appendChild(div);
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
-function clearMessages(){ messagesEl.innerHTML=''; }
-
-function loadMessages(room){
-  if(currentListener) off(currentListener);
-  clearMessages();
-  const messagesRef = ref(db, "messages/" + room);
-  currentListener = messagesRef;
-  onChildAdded(messagesRef, snap=>{
-    const m = snap.val();
-    if(!m) return;
-    appendMessage(m);
-  });
-}
-
+// Send message
 function sendMessage(){
   const txt = msgInput.value.trim();
   if(!txt) return;
-  push(ref(db, "messages/" + currentRoom), {
-    name: username,
-    id: myID,
-    text: txt,
-    timestamp: Date.now()
-  });
-  msgInput.value = '';
+  const payload = { name: username, id: myID, text: txt, timestamp: Date.now() };
+  appendMessage(payload); // Show instantly
+  push(ref(db,"messages/"+currentRoom), payload); // Firebase
+  msgInput.value='';
 }
 
 sendBtn.addEventListener('click', sendMessage);
-msgInput.addEventListener('keypress', e=>{ if(e.key==='Enter') sendMessage(); });
+msgInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter') sendMessage(); });
 
+// Public chat
+function joinPublic(){ currentRoom='public'; roomTitle.innerText='Public Chat'; attachRoomListener(currentRoom); }
+publicRoomBtn.addEventListener('click', joinPublic);
+
+// Room listener
+function attachRoomListener(room){
+  const roomRef = ref(db,"messages/"+room);
+  onChildAdded(roomRef,(snap)=>{ const m=snap.val(); if(!m) return; appendMessage(m); });
+}
+
+// Name modal submit
 function handleNameSubmit(e){
   if(e) e.preventDefault();
   const name = nameInput.value.trim();
   if(!name){ alert('Enter a display name'); return; }
   username = name.substring(0,32);
-  nameModal.remove();
-  loadMessages(currentRoom);
+  nameModal.style.display='none';
+  joinPublic();
 }
 
-nameSubmit.addEventListener('click', handleNameSubmit);
-nameInput.addEventListener('keydown', e=>{ if(e.key==='Enter') handleNameSubmit(e); });
+nameSubmit.addEventListener('click',handleNameSubmit);
+nameInput.addEventListener('keydown',(e)=>{ if(e.key==='Enter') handleNameSubmit(e); });
 setTimeout(()=>nameInput.focus(),100);
 
-// Room switching
-function switchRoom(room){
+// Create/Join Rooms
+createBtn.addEventListener('click',()=>{ createBox.classList.toggle('hidden'); joinBox.classList.add('hidden'); createInput.focus(); });
+joinBtn.addEventListener('click',()=>{ joinBox.classList.toggle('hidden'); createBox.classList.add('hidden'); joinInput.focus(); });
+doCreate.addEventListener('click',()=>{ const r=createInput.value.trim(); if(!r) return; joinRoom(r); createInput.value=''; });
+doJoin.addEventListener('click',()=>{ const r=joinInput.value.trim(); if(!r) return; joinRoom(r); joinInput.value=''; });
+
+function joinRoom(room){
   currentRoom = room;
-  roomTitle.innerText = room;
-  loadMessages(currentRoom);
-  Array.from(document.querySelectorAll('.sidebar-item')).forEach(el=>el.classList.remove('active'));
-  Array.from(joinedRoomsEl.children).forEach(el=>el.classList.remove('active'));
-  if(room==='public'){ publicRoomBtn.classList.add('active'); }
-  else{ Array.from(joinedRoomsEl.children).forEach(el=>{ if(el.innerText===room) el.classList.add('active'); }); }
+  roomTitle.innerText = room+" Room";
+  attachRoomListener(room);
+  addRoomToSidebar(room);
+  createBox.classList.add('hidden');
+  joinBox.classList.add('hidden');
 }
 
-// Public room
-publicRoomBtn.addEventListener('click', ()=>{ switchRoom('public'); });
-
-// Create Room
-createRoomBtn.addEventListener('click', ()=>{
-  const room = prompt("Enter new room name:")?.trim();
-  if(!room) return;
-  addJoinedRoom(room);
-  switchRoom(room);
-});
-
-// Join Room
-joinRoomBtn.addEventListener('click', ()=>{
-  const room = prompt("Enter room name to join:")?.trim();
-  if(!room) return;
-  addJoinedRoom(room);
-  switchRoom(room);
-});
-
-function addJoinedRoom(room){
-  if(Array.from(joinedRoomsEl.children).some(el=>el.innerText===room)) return;
+let myRooms = [];
+function addRoomToSidebar(room){
+  if(myRooms.includes(room)) return;
+  myRooms.push(room);
   const div = document.createElement('div');
   div.className='sidebar-item';
-  div.innerText=room;
-  div.addEventListener('click', ()=>{ switchRoom(room); });
-  joinedRoomsEl.appendChild(div);
+  div.textContent='🟣 '+room;
+  div.dataset.room=room;
+  div.onclick=()=>{ joinRoom(room); }
+  roomsList.appendChild(div);
 }
 </script>
 </body>
