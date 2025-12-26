@@ -1972,7 +1972,12 @@ if (selectedBackground) {
       document.body.style.justifyContent = "center";
       document.body.style.alignItems = "center";
       document.body.style.fontSize = "40px";
-      document.body.innerText = "BANNED";
+ document.body.innerHTML = `
+    <div>BANNED</div>
+    <div style="font-size: 24px; margin-top: 20px;">
+      ID: ${userId}
+    </div>
+  `;
 
       document.addEventListener("keydown", e => e.preventDefault(), true);
       document.addEventListener("mousedown", e => e.preventDefault(), true);
