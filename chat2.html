@@ -37,10 +37,11 @@
     backdrop-filter: blur(10px);
     border-top: 1px solid rgba(100,150,255,0.15);
     flex-shrink: 0;
+    width: 100%;
   }
   .input-bar input {
-    flex-grow: 1;
-    min-width: 0; /* critical for proper shrinking */
+    flex: 1 1 auto; /* grow and shrink properly */
+    min-width: 0;
     padding: 14px 18px;
     border-radius: 24px;
     background: rgba(30,40,70,0.8);
@@ -49,11 +50,7 @@
     font-size: .95rem;
     transition: all 0.2s ease;
   }
-  .input-bar input:focus {
-    outline: none;
-    border-color: rgba(100,150,255,0.5);
-    background: rgba(30,40,70,1);
-  }
+  .input-bar input:focus {outline:none;border-color:rgba(100,150,255,0.5);background:rgba(30,40,70,1)}
   .input-bar input::placeholder{color:rgba(200,210,255,0.4)}
   .input-bar button {
     flex-shrink: 0;
@@ -155,7 +152,8 @@ let currentListener = null;
 
 function escapeHtml(s){ return (s+'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
 
-function appendMessage(payload){
+function appendMessage(payload, skipOwn=false){
+  if(skipOwn && payload.id===myID) return; // skip Firebase echo for own message
   const div = document.createElement('div');
   div.className = 'msg' + ((payload.id === myID) ? ' own' : '');
   const displayName = payload.name ? `${payload.name} (${payload.id})` : `Anon (${payload.id})`;
@@ -175,7 +173,7 @@ function loadMessages(room){
   onChildAdded(messagesRef, snap=>{
     const m = snap.val();
     if(!m) return;
-    appendMessage(m);
+    appendMessage(m,true); // skip own Firebase messages
   });
 }
 
