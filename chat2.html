@@ -28,10 +28,11 @@
   .msg-bubble{background:rgba(30,45,80,0.9);padding:12px 16px;border-radius:12px;color:#e8eaf6;box-shadow:0 2px 6px rgba(0,0,0,0.2);border:1px solid rgba(100,150,255,0.1);line-height:1.5}
   .msg.own .msg-bubble{background:linear-gradient(135deg,#4e8cff 0%,#5a98ff 100%);color:#fff;border-color:rgba(255,255,255,0.1)}
   .input-bar{padding:16px 24px;background:rgba(15,25,50,0.9);backdrop-filter:blur(10px);border-top:1px solid rgba(100,150,255,0.15);display:flex;gap:12px;flex-shrink:0}
-  .input-bar input{flex:1;padding:14px 18px;border-radius:24px;background:rgba(30,40,70,0.8);border:1px solid rgba(100,150,255,0.2);color:#e8eaf6;font-size:.95rem;transition:all 0.2s ease}
+  /* FIXED INPUT BAR */
+  .input-bar input{flex:1; padding:14px 18px; border-radius:24px; background:rgba(30,40,70,0.8); border:1px solid rgba(100,150,255,0.2); color:#e8eaf6; font-size:.95rem; transition:all 0.2s ease; max-width: calc(100% - 110px);}
   .input-bar input:focus{outline:none;border-color:rgba(100,150,255,0.5);background:rgba(30,40,70,1)}
   .input-bar input::placeholder{color:rgba(200,210,255,0.4)}
-  .input-bar button{padding:14px 24px;background:linear-gradient(135deg,#4e8cff 0%,#3a6fd9 100%);border:none;border-radius:24px;font-weight:600;color:#fff;cursor:pointer;transition:all 0.2s ease;box-shadow:0 2px 6px rgba(78,140,255,0.3)}
+  .input-bar button{width:100px;padding:14px;border:none;border-radius:24px;background:linear-gradient(135deg,#4e8cff 0%,#3a6fd9 100%);font-weight:600;color:#fff;cursor:pointer;transition:all 0.2s ease;box-shadow:0 2px 6px rgba(78,140,255,0.3)}
   .input-bar button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(78,140,255,0.4)}
   .input-bar button:active{transform:translateY(0)}
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn 0.3s ease}
@@ -143,19 +144,16 @@ function loadMessages(room){
   });
 }
 
-// FIXED: Own messages appear immediately
 function sendMessage(){
   const txt = msgInput.value.trim();
   if(!txt) return;
-
   const messagePayload = {
     name: username,
     id: myID,
     text: txt,
     timestamp: Date.now()
   };
-
-  appendMessage(messagePayload); // Immediately show your message
+  appendMessage(messagePayload); // show immediately
   push(ref(db, "messages/" + currentRoom), messagePayload);
   msgInput.value = '';
 }
@@ -200,10 +198,7 @@ function switchRoom(room){
   else{ Array.from(joinedRoomsEl.children).forEach(el=>{ if(el.innerText===room) el.classList.add('active'); }); }
 }
 
-// PUBLIC ROOM
 publicRoomBtn.addEventListener('click', ()=>{ switchRoom('public'); });
-
-// CREATE ROOM
 createRoomBtn.addEventListener('click', ()=>{
   const room = prompt("Enter new room name:")?.trim();
   if(!room) return;
@@ -211,8 +206,6 @@ createRoomBtn.addEventListener('click', ()=>{
   refreshJoinedRoomsUI();
   switchRoom(room);
 });
-
-// JOIN ROOM
 joinRoomBtn.addEventListener('click', ()=>{
   const room = prompt("Enter room name to join:")?.trim();
   if(!room) return;
